@@ -1,0 +1,56 @@
+using EventService.Domain.Events;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace EventService.Infrastructure.Persistence.Configurations;
+
+internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<PlannedEvent>
+{
+    public void Configure(EntityTypeBuilder<PlannedEvent> builder)
+    {
+        builder.ToTable("events");
+
+        builder.HasKey(plannedEvent => plannedEvent.Id);
+
+        builder.Property(plannedEvent => plannedEvent.Id)
+            .HasColumnName("id")
+            .ValueGeneratedNever();
+
+        builder.Property(plannedEvent => plannedEvent.Name)
+            .HasColumnName("name")
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(plannedEvent => plannedEvent.EventTime)
+            .HasColumnName("event_time")
+            .IsRequired();
+
+        builder.Property(plannedEvent => plannedEvent.Type)
+            .HasColumnName("type")
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired();
+
+        builder.Property(plannedEvent => plannedEvent.Description)
+            .HasColumnName("description");
+
+        builder.Property(plannedEvent => plannedEvent.IsDeleted)
+            .HasColumnName("is_deleted")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(plannedEvent => plannedEvent.DeletedAt)
+            .HasColumnName("deleted_at");
+
+        builder.Property(plannedEvent => plannedEvent.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
+        builder.Property(plannedEvent => plannedEvent.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
+        builder.HasIndex(plannedEvent => new { plannedEvent.IsDeleted, plannedEvent.EventTime })
+            .HasDatabaseName("ix_events_is_deleted_event_time");
+    }
+}

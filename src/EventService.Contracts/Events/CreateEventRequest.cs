@@ -1,0 +1,7 @@
+namespace EventService.Contracts.Events;
+
+public sealed record CreateEventRequest(
+    string EventName,
+    string? EventTime,
+    string EventType,
+    string? EventDescription);

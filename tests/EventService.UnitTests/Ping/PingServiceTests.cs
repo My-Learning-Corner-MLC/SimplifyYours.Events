@@ -1,4 +1,5 @@
 using EventService.Application.Ping;
+using Moq;
 
 namespace EventService.UnitTests.Ping;
 
@@ -8,21 +9,15 @@ public sealed class PingServiceTests
     public void GetStatus_ReturnsServiceUpMessageWithCurrentGmtDateTime()
     {
         var fixedDateTime = new DateTimeOffset(2026, 5, 15, 8, 30, 45, TimeSpan.Zero);
-        var timeProvider = new FixedTimeProvider(fixedDateTime);
-        var service = new PingService(timeProvider);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(fixedDateTime);
+        var service = new PingService(timeProvider.Object);
 
         var response = service.GetStatus();
 
         Assert.Equal("Event service is up.", response.Message);
         Assert.Equal(fixedDateTime, response.CurrentGmtDateTime);
         Assert.Equal(TimeSpan.Zero, response.CurrentGmtDateTime.Offset);
-    }
-
-    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow()
-        {
-            return utcNow;
-        }
+        timeProvider.Verify(provider => provider.GetUtcNow(), Times.Once);
     }
 }

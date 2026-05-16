@@ -8,6 +8,7 @@ obj/
 *.lscache
 TestResults/
 coverage/
+coverage.cobertura.xml
 *.nupkg
 appsettings.Local.json
 appsettings.Production.json
