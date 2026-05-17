@@ -1,4 +1,5 @@
 using EventService.Application.Events.CreateEvent;
+using EventService.Application.Events.GetEventList;
 using EventService.Contracts.Events;
 using FluentValidation;
 using MediatR;
@@ -15,7 +16,55 @@ internal static class EventEndpoints
             .MapPost("", CreateEventAsync)
             .WithName("CreateEvent");
 
+        group
+            .MapPost("/query", QueryEventsAsync)
+            .WithName("QueryEvents");
+
         return endpoints;
+    }
+
+    private static async Task<IResult> QueryEventsAsync(
+        QueryEventsRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await sender.Send(
+                new GetEventListQuery(
+                    request.PageNumber,
+                    request.PageSize,
+                    request.Search,
+                    request.EventType,
+                    request.TimeFilter,
+                    request.SortBy,
+                    request.SortDirection),
+                cancellationToken);
+
+            var response = new QueryEventsResponse(
+                result.Items
+                    .Select(item => new EventSummaryResponse(
+                        item.Id,
+                        item.EventName,
+                        item.EventTime,
+                        item.EventType,
+                        item.EventDescription,
+                        item.CreatedAt,
+                        item.UpdatedAt))
+                    .ToArray(),
+                result.PageNumber,
+                result.PageSize,
+                result.TotalCount,
+                result.TotalPages,
+                result.HasPreviousPage,
+                result.HasNextPage);
+
+            return Results.Ok(response);
+        }
+        catch (ValidationException exception)
+        {
+            return Results.ValidationProblem(ToValidationErrors(exception));
+        }
     }
 
     private static async Task<IResult> CreateEventAsync(
@@ -46,13 +95,16 @@ internal static class EventEndpoints
         }
         catch (ValidationException exception)
         {
-            var errors = exception.Errors
-                .GroupBy(error => error.PropertyName)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(error => error.ErrorMessage).ToArray());
-
-            return Results.ValidationProblem(errors);
+            return Results.ValidationProblem(ToValidationErrors(exception));
         }
+    }
+
+    private static Dictionary<string, string[]> ToValidationErrors(ValidationException exception)
+    {
+        return exception.Errors
+            .GroupBy(error => error.PropertyName)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(error => error.ErrorMessage).ToArray());
     }
 }
