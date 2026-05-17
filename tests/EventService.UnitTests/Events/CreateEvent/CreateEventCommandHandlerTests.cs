@@ -1,0 +1,105 @@
+using EventService.Application.Abstractions.Events;
+using EventService.Application.Events.CreateEvent;
+using EventService.Domain.Events;
+using Moq;
+
+namespace EventService.UnitTests.Events.CreateEvent;
+
+public sealed class CreateEventCommandHandlerTests
+{
+    [Fact]
+    public async Task Handle_CreatesAndSavesEvent()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventTime = now.AddDays(3);
+        PlannedEvent? savedEvent = null;
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<PlannedEvent, CancellationToken>((plannedEvent, _) => savedEvent = plannedEvent)
+            .Returns(Task.CompletedTask);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+
+        var result = await handler.Handle(
+            new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details"),
+            CancellationToken.None);
+
+        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.Equal("Wedding plan", result.EventName);
+        Assert.Equal(eventTime, result.EventTime);
+        Assert.Equal("wedding", result.EventType);
+        Assert.Equal("Details", result.EventDescription);
+        Assert.Equal(now, result.CreatedAt);
+        Assert.Equal(now, result.UpdatedAt);
+        Assert.NotNull(savedEvent);
+        Assert.Equal(result.Id, savedEvent.Id);
+        Assert.False(savedEvent.IsDeleted);
+        repository.Verify(
+            repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        timeProvider.Verify(provider => provider.GetUtcNow(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenEventTimeIsOmitted_DefaultsToNow()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        PlannedEvent? savedEvent = null;
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<PlannedEvent, CancellationToken>((plannedEvent, _) => savedEvent = plannedEvent)
+            .Returns(Task.CompletedTask);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+
+        var result = await handler.Handle(
+            new CreateEventCommand("Birthday plan", null, "birthday", null),
+            CancellationToken.None);
+
+        Assert.Equal(now, result.EventTime);
+        Assert.Equal(now, savedEvent?.EventTime);
+        repository.Verify(
+            repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenEventTimeIsInvalid_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var repository = new Mock<IEventRepository>();
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
+            new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null),
+            CancellationToken.None));
+
+        repository.Verify(
+            repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenEventTypeIsInvalid_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var repository = new Mock<IEventRepository>();
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
+            new CreateEventCommand("Birthday plan", null, "conference", null),
+            CancellationToken.None));
+
+        repository.Verify(
+            repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+}
