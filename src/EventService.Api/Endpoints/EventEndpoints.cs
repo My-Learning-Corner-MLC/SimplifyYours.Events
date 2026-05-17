@@ -1,4 +1,5 @@
 using EventService.Application.Events.CreateEvent;
+using EventService.Application.Events.GetEventDetails;
 using EventService.Contracts.Events;
 using FluentValidation;
 using MediatR;
@@ -15,7 +16,35 @@ internal static class EventEndpoints
             .MapPost("", CreateEventAsync)
             .WithName("CreateEvent");
 
+        group
+            .MapGet("{eventId:guid}", GetEventDetailsAsync)
+            .WithName("GetEventDetails");
+
         return endpoints;
+    }
+
+    private static async Task<IResult> GetEventDetailsAsync(
+        Guid eventId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetEventDetailsQuery(eventId), cancellationToken);
+
+        if (result is null)
+        {
+            return Results.NotFound();
+        }
+
+        var response = new GetEventDetailsResponse(
+            result.Id,
+            result.EventName,
+            result.EventTime,
+            result.EventType,
+            result.EventDescription,
+            result.CreatedAt,
+            result.UpdatedAt);
+
+        return Results.Ok(response);
     }
 
     private static async Task<IResult> CreateEventAsync(
