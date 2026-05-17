@@ -1,4 +1,5 @@
 using EventService.Application.Events.CreateEvent;
+using EventService.Application.Events.GetEventDetails;
 using EventService.Application.Events.GetEventList;
 using EventService.Contracts.Events;
 using FluentValidation;
@@ -19,6 +20,10 @@ internal static class EventEndpoints
         group
             .MapPost("/query", QueryEventsAsync)
             .WithName("QueryEvents");
+
+        group
+            .MapGet("{eventId:guid}", GetEventDetailsAsync)
+            .WithName("GetEventDetails");
 
         return endpoints;
     }
@@ -65,6 +70,30 @@ internal static class EventEndpoints
         {
             return Results.ValidationProblem(ToValidationErrors(exception));
         }
+    }
+
+    private static async Task<IResult> GetEventDetailsAsync(
+        Guid eventId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetEventDetailsQuery(eventId), cancellationToken);
+
+        if (result is null)
+        {
+            return Results.NotFound();
+        }
+
+        var response = new GetEventDetailsResponse(
+            result.Id,
+            result.EventName,
+            result.EventTime,
+            result.EventType,
+            result.EventDescription,
+            result.CreatedAt,
+            result.UpdatedAt);
+
+        return Results.Ok(response);
     }
 
     private static async Task<IResult> CreateEventAsync(

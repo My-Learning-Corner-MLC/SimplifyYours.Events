@@ -28,4 +28,13 @@ internal sealed class EfCoreEventRepository(EventServiceDbContext dbContext) : I
 
         return new EventListPage(items, options.PageNumber, options.PageSize, totalCount);
     }
+
+    public async Task<PlannedEvent?> GetByIdAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Events
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                plannedEvent => plannedEvent.Id == eventId && !plannedEvent.IsDeleted,
+                cancellationToken);
+    }
 }
