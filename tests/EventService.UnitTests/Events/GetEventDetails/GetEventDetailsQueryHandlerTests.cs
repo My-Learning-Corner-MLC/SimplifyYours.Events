@@ -22,22 +22,23 @@ public sealed class GetEventDetailsQueryHandlerTests
             createdAt);
         var repository = new Mock<IEventRepository>();
         repository
-            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>()))
+            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), true))
             .ReturnsAsync(plannedEvent);
         var handler = new GetEventDetailsQueryHandler(repository.Object);
 
         var result = await handler.Handle(new GetEventDetailsQuery(eventId), CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal(eventId, result.Id);
-        Assert.Equal("Product launch", result.EventName);
-        Assert.Equal(eventTime, result.EventTime);
-        Assert.Equal("event", result.EventType);
-        Assert.Equal("Launch details", result.EventDescription);
-        Assert.Equal(createdAt, result.CreatedAt);
-        Assert.Equal(createdAt, result.UpdatedAt);
+        Assert.Equal(eventId, result.Event.Id);
+        Assert.Equal("Product launch", result.Event.EventName);
+        Assert.Equal(eventTime, result.Event.EventTime);
+        Assert.Equal("event", result.Event.EventType);
+        Assert.Equal("Launch details", result.Event.EventDescription);
+        Assert.Equal(createdAt, result.Event.CreatedAt);
+        Assert.Equal(createdAt, result.Event.UpdatedAt);
+        Assert.False(string.IsNullOrWhiteSpace(result.Event.ConcurrencyToken));
         repository.Verify(
-            repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>()),
+            repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), true),
             Times.Once);
     }
 
@@ -47,7 +48,7 @@ public sealed class GetEventDetailsQueryHandlerTests
         var eventId = Guid.NewGuid();
         var repository = new Mock<IEventRepository>();
         repository
-            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>()))
+            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), true))
             .ReturnsAsync((PlannedEvent?)null);
         var handler = new GetEventDetailsQueryHandler(repository.Object);
 
@@ -55,7 +56,7 @@ public sealed class GetEventDetailsQueryHandlerTests
 
         Assert.Null(result);
         repository.Verify(
-            repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>()),
+            repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), true),
             Times.Once);
     }
 }
