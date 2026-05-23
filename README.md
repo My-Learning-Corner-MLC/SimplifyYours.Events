@@ -57,14 +57,87 @@ Response body:
 }
 ```
 
-## Configuration
+## Developer Commands
 
-Set `ConnectionStrings__EventServiceDb` before using event persistence.
+Run these commands from `code/backend/event-service/`.
 
-## Local Checks
+### Restore
 
 ```bash
 dotnet restore EventService.sln
-dotnet build EventService.sln
-dotnet test EventService.sln
+```
+
+### Build
+
+```bash
+dotnet build EventService.sln --configuration Release --no-restore
+```
+
+### Test
+
+```bash
+dotnet test EventService.sln --configuration Release --no-build
+```
+
+### Test With Coverage
+
+```bash
+dotnet test EventService.sln --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=80 /p:ThresholdType=line /p:ThresholdStat=total
+```
+
+### Run The API Locally
+
+```bash
+dotnet run --project src/EventService.Api/EventService.Api.csproj
+```
+
+### Install EF CLI
+
+Install the EF CLI once if `dotnet ef` is not available.
+
+```bash
+dotnet tool install --global dotnet-ef --version 8.*
+```
+
+### Add A Migration
+
+```bash
+dotnet ef migrations add <MigrationName> \
+  --project src/EventService.Infrastructure/EventService.Infrastructure.csproj \
+  --startup-project src/EventService.Api/EventService.Api.csproj \
+  --context EventServiceDbContext \
+  --output-dir Persistence/Migrations
+```
+
+### Apply Migrations
+
+```bash
+dotnet ef database update \
+  --project src/EventService.Infrastructure/EventService.Infrastructure.csproj \
+  --startup-project src/EventService.Api/EventService.Api.csproj \
+  --context EventServiceDbContext
+```
+
+### List Migrations
+
+```bash
+dotnet ef migrations list \
+  --project src/EventService.Infrastructure/EventService.Infrastructure.csproj \
+  --startup-project src/EventService.Api/EventService.Api.csproj \
+  --context EventServiceDbContext
+```
+
+## README Maintenance
+
+Keep this README up to date during development. When a feature introduces a new
+endpoint, configuration value, migration workflow, local dependency, test
+command, script, or operational command, add or update the relevant README
+section in the same change.
+
+## CI Checks
+
+```bash
+dotnet restore EventService.sln
+dotnet build EventService.sln --configuration Release --no-restore
+dotnet test EventService.sln --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=80 /p:ThresholdType=line /p:ThresholdStat=total
 ```
