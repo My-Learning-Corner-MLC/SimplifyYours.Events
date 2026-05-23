@@ -4,3 +4,18 @@ GET {{EventService.Api_HostAddress}}/ping
 Accept: application/json
 
 ###
+
+POST {{EventService.Api_HostAddress}}/events/query
+Content-Type: application/json
+
+{
+  "pageNumber": 1,
+  "pageSize": 20,
+  "search": "launch",
+  "eventType": "event",
+  "timeFilter": "upcoming",
+  "sortBy": "createdAt",
+  "sortDirection": "desc"
+}
+
+###

@@ -58,6 +58,63 @@ Response body:
 }
 ```
 
+### `POST /events/query`
+
+Returns a paginated list of active events. Supports search by event name or description, filtering by event type and event time, and sorting by created or updated date.
+
+Request body:
+
+```json
+{
+  "pageNumber": 1,
+  "pageSize": 20,
+  "search": "launch",
+  "eventType": "event",
+  "timeFilter": "upcoming",
+  "sortBy": "createdAt",
+  "sortDirection": "desc"
+}
+```
+
+Request options:
+
+- `pageNumber`: optional, defaults to `1`.
+- `pageSize`: optional, defaults to `20`, maximum `100`.
+- `search`: optional, matches event name or description.
+- `eventType`: optional, one of `birthday`, `wedding`, or `event`.
+- `timeFilter`: optional, one of `all`, `upcoming`, or `past`.
+- `sortBy`: optional, one of `createdAt` or `updatedAt`.
+- `sortDirection`: optional, one of `asc` or `desc`.
+
+Responses:
+
+- `200 OK` with matching events and pagination metadata.
+- `400 Bad Request` with validation details when the request is invalid.
+
+Response body:
+
+```json
+{
+  "items": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "eventName": "Product launch",
+      "eventTime": "2026-06-01T10:00:00+00:00",
+      "eventType": "event",
+      "eventDescription": "Launch plan",
+      "createdAt": "2026-05-17T10:00:00+00:00",
+      "updatedAt": "2026-05-17T10:00:00+00:00"
+    }
+  ],
+  "pageNumber": 1,
+  "pageSize": 20,
+  "totalCount": 1,
+  "totalPages": 1,
+  "hasPreviousPage": false,
+  "hasNextPage": false
+}
+```
+
 ### `PUT /events/{id}`
 
 Updates an active event's editable details. Only event name, event time, and event description can be changed.
