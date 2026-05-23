@@ -1,4 +1,5 @@
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Events;
 using EventService.Domain.Events;
 using MediatR;
 
@@ -25,14 +26,7 @@ public sealed class CreateEventCommandHandler(
 
         await eventRepository.AddAsync(plannedEvent, cancellationToken);
 
-        return new CreateEventResult(
-            plannedEvent.Id,
-            plannedEvent.Name,
-            plannedEvent.EventTime,
-            plannedEvent.Type.ToString().ToLowerInvariant(),
-            plannedEvent.Description,
-            plannedEvent.CreatedAt,
-            plannedEvent.UpdatedAt);
+        return new CreateEventResult(EventDetails.From(plannedEvent));
     }
 
     private static DateTimeOffset ResolveEventTime(string? value, DateTimeOffset now)
@@ -42,7 +36,7 @@ public sealed class CreateEventCommandHandler(
             return now;
         }
 
-        if (CreateEventParsing.TryParseEventTime(value, out var eventTime))
+        if (EventParsing.TryParseEventTime(value, out var eventTime))
         {
             return eventTime;
         }
@@ -52,7 +46,7 @@ public sealed class CreateEventCommandHandler(
 
     private static EventType ResolveEventType(string value)
     {
-        if (CreateEventParsing.TryParseEventType(value, out var eventType))
+        if (EventParsing.TryParseEventType(value, out var eventType))
         {
             return eventType;
         }
