@@ -50,6 +50,12 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .HasColumnName("updated_at")
             .IsRequired();
 
+        builder.Property(plannedEvent => plannedEvent.ConcurrencyToken)
+            .HasColumnName("concurrency_token")
+            .HasColumnType("bytea")
+            .IsConcurrencyToken()
+            .IsRequired();
+
         builder.HasIndex(plannedEvent => new { plannedEvent.IsDeleted, plannedEvent.EventTime })
             .HasDatabaseName("ix_events_is_deleted_event_time");
     }

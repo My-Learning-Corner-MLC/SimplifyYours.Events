@@ -28,6 +28,76 @@ public sealed class PlannedEventTests
         Assert.Null(plannedEvent.DeletedAt);
         Assert.Equal(now, plannedEvent.CreatedAt);
         Assert.Equal(now, plannedEvent.UpdatedAt);
+        Assert.Equal(16, plannedEvent.ConcurrencyToken.Length);
+    }
+
+    [Fact]
+    public void UpdateDetails_UpdatesEditableFieldsAndConcurrencyToken()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Event,
+            "Old details",
+            now);
+        var originalToken = plannedEvent.ConcurrencyToken;
+        var updatedAt = now.AddMinutes(5);
+        var newEventTime = now.AddDays(2);
+
+        plannedEvent.UpdateDetails(
+            " Updated launch ",
+            newEventTime,
+            " Updated details ",
+            updatedAt);
+
+        Assert.Equal("Updated launch", plannedEvent.Name);
+        Assert.Equal(newEventTime, plannedEvent.EventTime);
+        Assert.Equal("Updated details", plannedEvent.Description);
+        Assert.Equal(updatedAt, plannedEvent.UpdatedAt);
+        Assert.Equal(EventType.Event, plannedEvent.Type);
+        Assert.Equal(now, plannedEvent.CreatedAt);
+        Assert.NotEqual(originalToken, plannedEvent.ConcurrencyToken);
+        Assert.Equal(16, plannedEvent.ConcurrencyToken.Length);
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenDescriptionIsBlank_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Event,
+            "Old details",
+            now);
+
+        plannedEvent.UpdateDetails("Launch plan", now.AddDays(2), "  ", now.AddMinutes(5));
+
+        Assert.Null(plannedEvent.Description);
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenNameIsBlank_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Event,
+            null,
+            now);
+
+        var exception = Assert.Throws<ArgumentException>(() => plannedEvent.UpdateDetails(
+            "  ",
+            now.AddDays(2),
+            null,
+            now.AddMinutes(5)));
+
+        Assert.Equal("name", exception.ParamName);
     }
 
     [Fact]
@@ -41,6 +111,7 @@ public sealed class PlannedEventTests
             EventType.Wedding,
             null,
             now);
+        var originalToken = plannedEvent.ConcurrencyToken;
 
         var deletedAt = now.AddMinutes(5);
         plannedEvent.SoftDelete(deletedAt);
@@ -48,6 +119,8 @@ public sealed class PlannedEventTests
         Assert.True(plannedEvent.IsDeleted);
         Assert.Equal(deletedAt, plannedEvent.DeletedAt);
         Assert.Equal(deletedAt, plannedEvent.UpdatedAt);
+        Assert.NotEqual(originalToken, plannedEvent.ConcurrencyToken);
+        var deletedToken = plannedEvent.ConcurrencyToken;
 
         var restoredAt = now.AddMinutes(10);
         plannedEvent.Restore(restoredAt);
@@ -55,6 +128,7 @@ public sealed class PlannedEventTests
         Assert.False(plannedEvent.IsDeleted);
         Assert.Null(plannedEvent.DeletedAt);
         Assert.Equal(restoredAt, plannedEvent.UpdatedAt);
+        Assert.NotEqual(deletedToken, plannedEvent.ConcurrencyToken);
     }
 
     [Fact]
@@ -118,12 +192,14 @@ public sealed class PlannedEventTests
             now);
         var deletedAt = now.AddMinutes(1);
         plannedEvent.SoftDelete(deletedAt);
+        var deletedToken = plannedEvent.ConcurrencyToken;
 
         plannedEvent.SoftDelete(now.AddMinutes(2));
 
         Assert.True(plannedEvent.IsDeleted);
         Assert.Equal(deletedAt, plannedEvent.DeletedAt);
         Assert.Equal(deletedAt, plannedEvent.UpdatedAt);
+        Assert.Equal(deletedToken, plannedEvent.ConcurrencyToken);
     }
 
     [Fact]
@@ -137,11 +213,13 @@ public sealed class PlannedEventTests
             EventType.Event,
             null,
             now);
+        var originalToken = plannedEvent.ConcurrencyToken;
 
         plannedEvent.Restore(now.AddMinutes(1));
 
         Assert.False(plannedEvent.IsDeleted);
         Assert.Null(plannedEvent.DeletedAt);
         Assert.Equal(now, plannedEvent.UpdatedAt);
+        Assert.Equal(originalToken, plannedEvent.ConcurrencyToken);
     }
 }

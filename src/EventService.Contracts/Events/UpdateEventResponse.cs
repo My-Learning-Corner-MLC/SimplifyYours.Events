@@ -1,6 +1,6 @@
 namespace EventService.Contracts.Events;
 
-public sealed record CreateEventResponse(
+public sealed record UpdateEventResponse(
     Guid Id,
     string EventName,
     DateTimeOffset EventTime,

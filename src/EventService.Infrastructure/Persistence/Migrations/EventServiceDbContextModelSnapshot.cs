@@ -33,6 +33,12 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("created_at");
 
+            b.Property<byte[]>("ConcurrencyToken")
+                .IsConcurrencyToken()
+                .IsRequired()
+                .HasColumnType("bytea")
+                .HasColumnName("concurrency_token");
+
             b.Property<DateTimeOffset?>("DeletedAt")
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("deleted_at");

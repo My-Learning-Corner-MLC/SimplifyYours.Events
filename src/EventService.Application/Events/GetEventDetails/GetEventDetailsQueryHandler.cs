@@ -1,4 +1,5 @@
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Events;
 using MediatR;
 
 namespace EventService.Application.Events.GetEventDetails;
@@ -17,13 +18,6 @@ public sealed class GetEventDetailsQueryHandler(IEventRepository eventRepository
             return null;
         }
 
-        return new GetEventDetailsResult(
-            plannedEvent.Id,
-            plannedEvent.Name,
-            plannedEvent.EventTime,
-            plannedEvent.Type.ToString().ToLowerInvariant(),
-            plannedEvent.Description,
-            plannedEvent.CreatedAt,
-            plannedEvent.UpdatedAt);
+        return new GetEventDetailsResult(EventDetails.From(plannedEvent));
     }
 }

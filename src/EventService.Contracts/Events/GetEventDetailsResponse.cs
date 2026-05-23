@@ -7,4 +7,5 @@ public sealed record GetEventDetailsResponse(
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string ConcurrencyToken);
