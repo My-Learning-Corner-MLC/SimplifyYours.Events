@@ -1,3 +1,4 @@
+using EventService.Application.Events;
 using FluentValidation;
 
 namespace EventService.Application.Events.CreateEvent;
@@ -19,13 +20,13 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
         RuleFor(command => command.EventType)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Must((command, eventType) => CreateEventParsing.TryParseEventType(eventType, out _))
+            .Must((command, eventType) => EventParsing.TryParseEventType(eventType, out _))
             .WithMessage("Event type must be one of: birthday, wedding, event.");
 
         RuleFor(command => command.EventTime)
             .Cascade(CascadeMode.Stop)
             .Must((command, eventTime) => string.IsNullOrWhiteSpace(eventTime)
-                || CreateEventParsing.TryParseEventTime(eventTime, out _))
+                || EventParsing.TryParseEventTime(eventTime, out _))
             .WithMessage("Event time must be a valid date-time string.")
             .Must((command, eventTime) =>
             {
@@ -34,7 +35,7 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
                     return true;
                 }
 
-                return CreateEventParsing.TryParseEventTime(eventTime, out var parsedEventTime)
+                return EventParsing.TryParseEventTime(eventTime, out var parsedEventTime)
                     && parsedEventTime >= timeProvider.GetUtcNow();
             })
             .WithMessage("Event time must be now or in the future.");

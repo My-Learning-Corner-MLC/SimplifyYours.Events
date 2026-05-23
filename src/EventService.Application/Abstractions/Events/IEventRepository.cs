@@ -8,5 +8,13 @@ public interface IEventRepository
 
     Task<EventListPage> ListAsync(EventListQueryOptions options, CancellationToken cancellationToken);
 
-    Task<PlannedEvent?> GetByIdAsync(Guid eventId, CancellationToken cancellationToken);
+    Task<PlannedEvent?> GetByIdAsync(
+        Guid eventId,
+        CancellationToken cancellationToken,
+        bool asNoTracking = true);
+
+    Task<bool> UpdateAsync(
+        PlannedEvent plannedEvent,
+        byte[] expectedConcurrencyToken,
+        CancellationToken cancellationToken);
 }

@@ -23,6 +23,7 @@ public sealed class PlannedEvent
         DeletedAt = null;
         CreatedAt = createdAt;
         UpdatedAt = createdAt;
+        ConcurrencyToken = CreateConcurrencyToken();
     }
 
     public Guid Id { get; private set; }
@@ -42,6 +43,8 @@ public sealed class PlannedEvent
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    public byte[] ConcurrencyToken { get; private set; } = [];
 
     public static PlannedEvent Create(
         Guid id,
@@ -71,6 +74,31 @@ public sealed class PlannedEvent
         return new PlannedEvent(id, normalizedName, eventTime.ToUniversalTime(), type, description, createdAt.ToUniversalTime());
     }
 
+    public void UpdateDetails(
+        string name,
+        DateTimeOffset eventTime,
+        string? description,
+        DateTimeOffset updatedAt)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
+        }
+
+        var normalizedName = name.Trim();
+
+        if (normalizedName.Length < 3)
+        {
+            throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
+        }
+
+        Name = normalizedName;
+        EventTime = eventTime.ToUniversalTime();
+        Description = NormalizeOptionalText(description);
+        UpdatedAt = updatedAt.ToUniversalTime();
+        ConcurrencyToken = CreateConcurrencyToken();
+    }
+
     public void SoftDelete(DateTimeOffset deletedAt)
     {
         if (IsDeleted)
@@ -82,6 +110,7 @@ public sealed class PlannedEvent
         IsDeleted = true;
         DeletedAt = utcDeletedAt;
         UpdatedAt = utcDeletedAt;
+        ConcurrencyToken = CreateConcurrencyToken();
     }
 
     public void Restore(DateTimeOffset restoredAt)
@@ -94,10 +123,16 @@ public sealed class PlannedEvent
         IsDeleted = false;
         DeletedAt = null;
         UpdatedAt = restoredAt.ToUniversalTime();
+        ConcurrencyToken = CreateConcurrencyToken();
     }
 
     private static string? NormalizeOptionalText(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static byte[] CreateConcurrencyToken()
+    {
+        return Guid.NewGuid().ToByteArray();
     }
 }

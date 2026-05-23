@@ -1,6 +1,7 @@
 using EventService.Application.Events.CreateEvent;
 using EventService.Application.Events.GetEventDetails;
 using EventService.Application.Events.GetEventList;
+using EventService.Application.Events.UpdateEvent;
 using EventService.Contracts.Events;
 using FluentValidation;
 using MediatR;
@@ -24,6 +25,10 @@ internal static class EventEndpoints
         group
             .MapGet("{eventId:guid}", GetEventDetailsAsync)
             .WithName("GetEventDetails");
+
+        group
+            .MapPut("{id:guid}", UpdateEventAsync)
+            .WithName("UpdateEvent");
 
         return endpoints;
     }
@@ -85,13 +90,14 @@ internal static class EventEndpoints
         }
 
         var response = new GetEventDetailsResponse(
-            result.Id,
-            result.EventName,
-            result.EventTime,
-            result.EventType,
-            result.EventDescription,
-            result.CreatedAt,
-            result.UpdatedAt);
+            result.Event.Id,
+            result.Event.EventName,
+            result.Event.EventTime,
+            result.Event.EventType,
+            result.Event.EventDescription,
+            result.Event.CreatedAt,
+            result.Event.UpdatedAt,
+            result.Event.ConcurrencyToken);
 
         return Results.Ok(response);
     }
@@ -112,19 +118,65 @@ internal static class EventEndpoints
                 cancellationToken);
 
             var response = new CreateEventResponse(
-                result.Id,
-                result.EventName,
-                result.EventTime,
-                result.EventType,
-                result.EventDescription,
-                result.CreatedAt,
-                result.UpdatedAt);
+                result.Event.Id,
+                result.Event.EventName,
+                result.Event.EventTime,
+                result.Event.EventType,
+                result.Event.EventDescription,
+                result.Event.CreatedAt,
+                result.Event.UpdatedAt,
+                result.Event.ConcurrencyToken);
 
             return Results.Created($"/events/{response.Id}", response);
         }
         catch (ValidationException exception)
         {
             return Results.ValidationProblem(ToValidationErrors(exception));
+        }
+    }
+
+    private static async Task<IResult> UpdateEventAsync(
+        Guid id,
+        UpdateEventRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await sender.Send(
+                new UpdateEventCommand(
+                    id,
+                    request.EventName,
+                    request.EventTime,
+                    request.EventDescription,
+                    request.ConcurrencyToken),
+                cancellationToken);
+
+            return result.Status switch
+            {
+                UpdateEventStatus.Updated when result.Event is not null => Results.Ok(new UpdateEventResponse(
+                    result.Event.Id,
+                    result.Event.EventName,
+                    result.Event.EventTime,
+                    result.Event.EventType,
+                    result.Event.EventDescription,
+                    result.Event.CreatedAt,
+                    result.Event.UpdatedAt,
+                    result.Event.ConcurrencyToken)),
+                UpdateEventStatus.NotFound => Results.NotFound(),
+                UpdateEventStatus.Conflict => Results.Conflict(),
+                _ => Results.Problem("Unexpected update event result.")
+            };
+        }
+        catch (ValidationException exception)
+        {
+            var errors = exception.Errors
+                .GroupBy(error => error.PropertyName)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(error => error.ErrorMessage).ToArray());
+
+            return Results.ValidationProblem(errors);
         }
     }
 

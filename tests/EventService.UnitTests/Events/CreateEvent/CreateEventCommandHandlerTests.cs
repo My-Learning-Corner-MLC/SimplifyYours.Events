@@ -26,15 +26,16 @@ public sealed class CreateEventCommandHandlerTests
             new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details"),
             CancellationToken.None);
 
-        Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal("Wedding plan", result.EventName);
-        Assert.Equal(eventTime, result.EventTime);
-        Assert.Equal("wedding", result.EventType);
-        Assert.Equal("Details", result.EventDescription);
-        Assert.Equal(now, result.CreatedAt);
-        Assert.Equal(now, result.UpdatedAt);
+        Assert.NotEqual(Guid.Empty, result.Event.Id);
+        Assert.Equal("Wedding plan", result.Event.EventName);
+        Assert.Equal(eventTime, result.Event.EventTime);
+        Assert.Equal("wedding", result.Event.EventType);
+        Assert.Equal("Details", result.Event.EventDescription);
+        Assert.Equal(now, result.Event.CreatedAt);
+        Assert.Equal(now, result.Event.UpdatedAt);
+        Assert.False(string.IsNullOrWhiteSpace(result.Event.ConcurrencyToken));
         Assert.NotNull(savedEvent);
-        Assert.Equal(result.Id, savedEvent.Id);
+        Assert.Equal(result.Event.Id, savedEvent.Id);
         Assert.False(savedEvent.IsDeleted);
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
@@ -60,7 +61,7 @@ public sealed class CreateEventCommandHandlerTests
             new CreateEventCommand("Birthday plan", null, "birthday", null),
             CancellationToken.None);
 
-        Assert.Equal(now, result.EventTime);
+        Assert.Equal(now, result.Event.EventTime);
         Assert.Equal(now, savedEvent?.EventTime);
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),

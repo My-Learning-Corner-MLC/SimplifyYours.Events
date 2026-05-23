@@ -29,12 +29,41 @@ internal sealed class EfCoreEventRepository(EventServiceDbContext dbContext) : I
         return new EventListPage(items, options.PageNumber, options.PageSize, totalCount);
     }
 
-    public async Task<PlannedEvent?> GetByIdAsync(Guid eventId, CancellationToken cancellationToken)
+    public async Task<PlannedEvent?> GetByIdAsync(
+        Guid eventId,
+        CancellationToken cancellationToken,
+        bool asNoTracking = true)
     {
-        return await dbContext.Events
-            .AsNoTracking()
-            .SingleOrDefaultAsync(
-                plannedEvent => plannedEvent.Id == eventId && !plannedEvent.IsDeleted,
-                cancellationToken);
+        var query = dbContext.Events
+            .Where(plannedEvent => !plannedEvent.IsDeleted);
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query
+            .SingleOrDefaultAsync(plannedEvent => plannedEvent.Id == eventId, cancellationToken);
     }
+
+    public async Task<bool> UpdateAsync(
+        PlannedEvent plannedEvent,
+        byte[] expectedConcurrencyToken,
+        CancellationToken cancellationToken)
+    {
+        dbContext.Entry(plannedEvent)
+            .Property(currentEvent => currentEvent.ConcurrencyToken)
+            .OriginalValue = expectedConcurrencyToken;
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return false;
+        }
+    }
+
 }

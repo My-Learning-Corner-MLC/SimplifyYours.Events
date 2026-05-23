@@ -1,9 +1,9 @@
 using System.Globalization;
 using EventService.Domain.Events;
 
-namespace EventService.Application.Events.CreateEvent;
+namespace EventService.Application.Events;
 
-internal static class CreateEventParsing
+internal static class EventParsing
 {
     public static bool TryParseEventTime(string? value, out DateTimeOffset eventTime)
     {
