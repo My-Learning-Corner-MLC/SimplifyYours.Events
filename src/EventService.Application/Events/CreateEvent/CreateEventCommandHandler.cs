@@ -1,5 +1,8 @@
+using EventService.Application.Abstractions.Common;
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events;
+using EventService.Application.IntegrationEvents;
 using EventService.Domain.Events;
 using MediatR;
 
@@ -7,6 +10,8 @@ namespace EventService.Application.Events.CreateEvent;
 
 public sealed class CreateEventCommandHandler(
     IEventRepository eventRepository,
+    IIntegrationEventOutbox integrationEventOutbox,
+    IUnitOfWork unitOfWork,
     TimeProvider timeProvider)
     : IRequestHandler<CreateEventCommand, CreateEventResult>
 {
@@ -25,6 +30,10 @@ public sealed class CreateEventCommandHandler(
             now);
 
         await eventRepository.AddAsync(plannedEvent, cancellationToken);
+        await integrationEventOutbox.AddAsync(
+            EventReferenceIntegrationEvents.Created(plannedEvent, now),
+            cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CreateEventResult(EventDetails.From(plannedEvent));
     }

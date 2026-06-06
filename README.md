@@ -205,6 +205,37 @@ Response body:
 }
 ```
 
+## Integration Events
+
+Event Service writes event reference integration events to its transactional outbox when supported event records change.
+
+Current event types:
+
+- `EventCreated`
+- `EventUpdated`
+- `EventDeleted` contract is defined for consumers that need deletion state, and will be written when delete behavior is introduced.
+
+Envelope fields:
+
+- `event_id`
+- `event_type`
+- `occurred_at`
+- `correlation_id`
+- `causation_id`
+- `payload`
+- `version`
+
+Payload shape:
+
+```json
+{
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "eventName": "Product launch"
+}
+```
+
+Outbox rows are stored in `outbox_messages`. A Kafka outbox publisher background service publishes unprocessed rows to `Kafka:EventReferenceTopic` when `Kafka:BootstrapServers` is configured. The publisher is disabled when Kafka configuration is incomplete.
+
 ## Developer Commands
 
 Run these commands from `code/backend/event-service/`.

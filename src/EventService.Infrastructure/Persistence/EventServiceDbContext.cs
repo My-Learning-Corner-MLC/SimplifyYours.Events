@@ -1,4 +1,5 @@
 using EventService.Domain.Events;
+using EventService.Infrastructure.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventService.Infrastructure.Persistence;
@@ -7,6 +8,8 @@ public sealed class EventServiceDbContext(DbContextOptions<EventServiceDbContext
     : DbContext(options)
 {
     public DbSet<PlannedEvent> Events => Set<PlannedEvent>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

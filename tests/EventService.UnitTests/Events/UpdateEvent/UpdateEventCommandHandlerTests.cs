@@ -1,7 +1,9 @@
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events.UpdateEvent;
 using EventService.Domain.Events;
 using Moq;
+using SimplifyYours.Event.Abstractions;
 
 namespace EventService.UnitTests.Events.UpdateEvent;
 
@@ -34,7 +36,8 @@ public sealed class UpdateEventCommandHandlerTests
             .ReturnsAsync(true);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
-        var handler = new UpdateEventCommandHandler(repository.Object, timeProvider.Object);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(repository.Object, outbox.Object, timeProvider.Object);
 
         var result = await handler.Handle(
             new UpdateEventCommand(
@@ -63,6 +66,11 @@ public sealed class UpdateEventCommandHandlerTests
                 It.Is<byte[]>(token => token.SequenceEqual(expectedToken)),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+        outbox.Verify(
+            publisher => publisher.AddAsync(
+                It.Is<IntegrationEventEnvelope>(message => message.EventType == "EventUpdated"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -76,7 +84,8 @@ public sealed class UpdateEventCommandHandlerTests
             .ReturnsAsync((PlannedEvent?)null);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
-        var handler = new UpdateEventCommandHandler(repository.Object, timeProvider.Object);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(repository.Object, outbox.Object, timeProvider.Object);
 
         var result = await handler.Handle(
             new UpdateEventCommand(
@@ -93,6 +102,9 @@ public sealed class UpdateEventCommandHandlerTests
                 It.IsAny<PlannedEvent>(),
                 It.IsAny<byte[]>(),
                 It.IsAny<CancellationToken>()),
+            Times.Never);
+        outbox.Verify(
+            publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -121,7 +133,8 @@ public sealed class UpdateEventCommandHandlerTests
             .ReturnsAsync(false);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
-        var handler = new UpdateEventCommandHandler(repository.Object, timeProvider.Object);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(repository.Object, outbox.Object, timeProvider.Object);
 
         var result = await handler.Handle(
             new UpdateEventCommand(
@@ -133,5 +146,8 @@ public sealed class UpdateEventCommandHandlerTests
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.Conflict, result.Status);
+        outbox.Verify(
+            publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

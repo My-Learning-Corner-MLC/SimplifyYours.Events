@@ -10,7 +10,6 @@ internal sealed class EfCoreEventRepository(EventServiceDbContext dbContext) : I
     public async Task AddAsync(PlannedEvent plannedEvent, CancellationToken cancellationToken)
     {
         await dbContext.Events.AddAsync(plannedEvent, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<EventListPage> ListAsync(EventListQueryOptions options, CancellationToken cancellationToken)

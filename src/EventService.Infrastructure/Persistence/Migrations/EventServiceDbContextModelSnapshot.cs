@@ -82,6 +82,67 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
 
             b.ToTable("events", (string)null);
         });
+
+        modelBuilder.Entity("EventService.Infrastructure.Persistence.Outbox.OutboxMessage", b =>
+        {
+            b.Property<Guid>("Id")
+                .ValueGeneratedNever()
+                .HasColumnType("uuid")
+                .HasColumnName("id");
+
+            b.Property<Guid?>("CausationId")
+                .HasColumnType("uuid")
+                .HasColumnName("causation_id");
+
+            b.Property<Guid>("CorrelationId")
+                .HasColumnType("uuid")
+                .HasColumnName("correlation_id");
+
+            b.Property<DateTimeOffset>("CreatedAt")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("created_at");
+
+            b.Property<string>("Error")
+                .HasColumnType("text")
+                .HasColumnName("error");
+
+            b.Property<string>("EventType")
+                .IsRequired()
+                .HasMaxLength(128)
+                .HasColumnType("character varying(128)")
+                .HasColumnName("event_type");
+
+            b.Property<DateTimeOffset>("OccurredAt")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("occurred_at");
+
+            b.Property<string>("Payload")
+                .IsRequired()
+                .HasColumnType("jsonb")
+                .HasColumnName("payload");
+
+            b.Property<DateTimeOffset?>("ProcessedAt")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("processed_at");
+
+            b.Property<int>("RetryCount")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("integer")
+                .HasDefaultValue(0)
+                .HasColumnName("retry_count");
+
+            b.Property<int>("Version")
+                .HasColumnType("integer")
+                .HasColumnName("version");
+
+            b.HasKey("Id")
+                .HasName("pk_outbox_messages");
+
+            b.HasIndex("ProcessedAt", "CreatedAt")
+                .HasDatabaseName("ix_outbox_messages_processed_at_created_at");
+
+            b.ToTable("outbox_messages", (string)null);
+        });
 #pragma warning restore 612, 618
     }
 }
