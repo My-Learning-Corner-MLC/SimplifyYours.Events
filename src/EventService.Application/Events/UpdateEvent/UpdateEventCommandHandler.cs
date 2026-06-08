@@ -1,12 +1,14 @@
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Events;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace EventService.Application.Events.UpdateEvent;
 
 public sealed class UpdateEventCommandHandler(
     IEventRepository eventRepository,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<UpdateEventCommandHandler> logger)
     : IRequestHandler<UpdateEventCommand, UpdateEventResult>
 {
     public async Task<UpdateEventResult> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
@@ -18,6 +20,7 @@ public sealed class UpdateEventCommandHandler(
 
         if (plannedEvent is null)
         {
+            logger.LogWarning("Event update requested but event was not found. EventId: {EventId}.", request.EventId);
             return UpdateEventResult.NotFound();
         }
 
@@ -38,8 +41,11 @@ public sealed class UpdateEventCommandHandler(
 
         if (!updated)
         {
+            logger.LogWarning("Event update conflict detected. EventId: {EventId}.", request.EventId);
             return UpdateEventResult.Conflict();
         }
+
+        logger.LogInformation("Event updated. EventId: {EventId}. EventTime: {EventTime}.", plannedEvent.Id, plannedEvent.EventTime);
 
         return UpdateEventResult.Updated(EventDetails.From(plannedEvent));
     }

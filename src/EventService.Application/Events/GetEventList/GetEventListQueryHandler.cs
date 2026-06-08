@@ -1,12 +1,14 @@
 using EventService.Application.Abstractions.Events;
 using EventService.Domain.Events;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace EventService.Application.Events.GetEventList;
 
 public sealed class GetEventListQueryHandler(
     IEventRepository eventRepository,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<GetEventListQueryHandler> logger)
     : IRequestHandler<GetEventListQuery, GetEventListResult>
 {
     public async Task<GetEventListResult> Handle(GetEventListQuery request, CancellationToken cancellationToken)
@@ -37,7 +39,7 @@ public sealed class GetEventListQueryHandler(
                 plannedEvent.UpdatedAt))
             .ToArray();
 
-        return new GetEventListResult(
+        var result = new GetEventListResult(
             items,
             page.PageNumber,
             page.PageSize,
@@ -45,6 +47,15 @@ public sealed class GetEventListQueryHandler(
             totalPages,
             page.PageNumber > 1,
             page.PageNumber < totalPages);
+
+        logger.LogInformation(
+            "Event list retrieved. PageNumber: {PageNumber}. PageSize: {PageSize}. ReturnedCount: {ReturnedCount}. TotalCount: {TotalCount}.",
+            result.PageNumber,
+            result.PageSize,
+            result.Items.Count,
+            result.TotalCount);
+
+        return result;
     }
 
     private static string? NormalizeOptionalText(string? value)

@@ -1,4 +1,6 @@
 using EventService.Api.Endpoints;
+using EventService.Api.Middleware;
+using EventService.Api.Responses;
 using EventService.Application;
 using EventService.Infrastructure;
 
@@ -8,6 +10,9 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseFriendlyErrorResponses();
+app.UseRequestLogging();
 
 app.MapPingEndpoints();
 app.MapEventEndpoints();
