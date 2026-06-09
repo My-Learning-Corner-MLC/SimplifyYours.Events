@@ -8,7 +8,7 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.1" />
     <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="SimplifyYours.Event.Abstractions" Version="1.0.0" />
+    <PackageReference Include="SimplifyYours.Event.Abstractions" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>
