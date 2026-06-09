@@ -1,5 +1,8 @@
+using EventService.Application.Abstractions.Common;
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events;
+using EventService.Application.IntegrationEvents;
 using EventService.Domain.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -8,6 +11,8 @@ namespace EventService.Application.Events.CreateEvent;
 
 public sealed class CreateEventCommandHandler(
     IEventRepository eventRepository,
+    IIntegrationEventOutbox integrationEventOutbox,
+    IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<CreateEventCommandHandler> logger)
     : IRequestHandler<CreateEventCommand, CreateEventResult>
@@ -27,6 +32,10 @@ public sealed class CreateEventCommandHandler(
             now);
 
         await eventRepository.AddAsync(plannedEvent, cancellationToken);
+        await integrationEventOutbox.AddAsync(
+            EventReferenceIntegrationEvents.Created(plannedEvent, now),
+            cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Event created. EventId: {EventId}. EventType: {EventType}. EventTime: {EventTime}.",

@@ -1,8 +1,11 @@
+using EventService.Application.Abstractions.Common;
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events.CreateEvent;
 using EventService.Domain.Events;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using SimplifyYours.Event.Abstractions;
 
 namespace EventService.UnitTests.Events.CreateEvent;
 
@@ -21,8 +24,12 @@ public sealed class CreateEventCommandHandlerTests
             .Returns(Task.CompletedTask);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
         var handler = new CreateEventCommandHandler(
             repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
             timeProvider.Object,
             NullLogger<CreateEventCommandHandler>.Instance);
 
@@ -44,6 +51,12 @@ public sealed class CreateEventCommandHandlerTests
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
             Times.Once);
+        outbox.Verify(
+            publisher => publisher.AddAsync(
+                It.Is<IntegrationEventEnvelope>(message => message.EventType == "EventCreated"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         timeProvider.Verify(provider => provider.GetUtcNow(), Times.Once);
     }
 
@@ -59,8 +72,12 @@ public sealed class CreateEventCommandHandlerTests
             .Returns(Task.CompletedTask);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
         var handler = new CreateEventCommandHandler(
             repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
             timeProvider.Object,
             NullLogger<CreateEventCommandHandler>.Instance);
 
@@ -73,6 +90,10 @@ public sealed class CreateEventCommandHandlerTests
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
             Times.Once);
+        outbox.Verify(
+            publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -82,8 +103,12 @@ public sealed class CreateEventCommandHandlerTests
         var repository = new Mock<IEventRepository>();
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
         var handler = new CreateEventCommandHandler(
             repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
             timeProvider.Object,
             NullLogger<CreateEventCommandHandler>.Instance);
 
@@ -94,6 +119,10 @@ public sealed class CreateEventCommandHandlerTests
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        outbox.Verify(
+            publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -103,8 +132,12 @@ public sealed class CreateEventCommandHandlerTests
         var repository = new Mock<IEventRepository>();
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
         var handler = new CreateEventCommandHandler(
             repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
             timeProvider.Object,
             NullLogger<CreateEventCommandHandler>.Instance);
 
@@ -115,5 +148,9 @@ public sealed class CreateEventCommandHandlerTests
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        outbox.Verify(
+            publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

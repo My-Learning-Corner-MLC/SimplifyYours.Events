@@ -1,5 +1,7 @@
 using EventService.Application.Abstractions.Events;
+using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events;
+using EventService.Application.IntegrationEvents;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -7,6 +9,7 @@ namespace EventService.Application.Events.UpdateEvent;
 
 public sealed class UpdateEventCommandHandler(
     IEventRepository eventRepository,
+    IIntegrationEventOutbox integrationEventOutbox,
     TimeProvider timeProvider,
     ILogger<UpdateEventCommandHandler> logger)
     : IRequestHandler<UpdateEventCommand, UpdateEventResult>
@@ -33,6 +36,10 @@ public sealed class UpdateEventCommandHandler(
             eventTime,
             request.EventDescription,
             now);
+
+        await integrationEventOutbox.AddAsync(
+            EventReferenceIntegrationEvents.Updated(plannedEvent, now),
+            cancellationToken);
 
         var updated = await eventRepository.UpdateAsync(
             plannedEvent,

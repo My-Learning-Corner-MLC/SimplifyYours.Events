@@ -13,7 +13,6 @@ internal sealed class EfCoreEventRepository(
     public async Task AddAsync(PlannedEvent plannedEvent, CancellationToken cancellationToken)
     {
         await dbContext.Events.AddAsync(plannedEvent, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Event persisted. EventId: {EventId}.", plannedEvent.Id);
     }
 
