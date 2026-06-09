@@ -25,7 +25,7 @@ jobs:
           dotnet-version: 8.0.x
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore
         run: dotnet restore EventService.sln
