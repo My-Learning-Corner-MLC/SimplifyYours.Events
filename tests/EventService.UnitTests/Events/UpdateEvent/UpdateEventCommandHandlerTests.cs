@@ -2,6 +2,7 @@ using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events.UpdateEvent;
 using EventService.Domain.Events;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SimplifyYours.Event.Abstractions;
 
@@ -37,7 +38,11 @@ public sealed class UpdateEventCommandHandlerTests
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
         var outbox = new Mock<IIntegrationEventOutbox>();
-        var handler = new UpdateEventCommandHandler(repository.Object, outbox.Object, timeProvider.Object);
+        var handler = new UpdateEventCommandHandler(
+            repository.Object, 
+            outbox.Object, 
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new UpdateEventCommand(
@@ -85,7 +90,11 @@ public sealed class UpdateEventCommandHandlerTests
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
         var outbox = new Mock<IIntegrationEventOutbox>();
-        var handler = new UpdateEventCommandHandler(repository.Object, outbox.Object, timeProvider.Object);
+        var handler = new UpdateEventCommandHandler(
+            repository.Object, 
+            outbox.Object, 
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new UpdateEventCommand(
@@ -134,7 +143,11 @@ public sealed class UpdateEventCommandHandlerTests
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
         var outbox = new Mock<IIntegrationEventOutbox>();
-        var handler = new UpdateEventCommandHandler(repository.Object, outbox.Object, timeProvider.Object);
+        var handler = new UpdateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new UpdateEventCommand(

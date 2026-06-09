@@ -3,6 +3,7 @@ using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events.CreateEvent;
 using EventService.Domain.Events;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SimplifyYours.Event.Abstractions;
 
@@ -29,7 +30,8 @@ public sealed class CreateEventCommandHandlerTests
             repository.Object,
             outbox.Object,
             unitOfWork.Object,
-            timeProvider.Object);
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details"),
@@ -76,7 +78,8 @@ public sealed class CreateEventCommandHandlerTests
             repository.Object,
             outbox.Object,
             unitOfWork.Object,
-            timeProvider.Object);
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new CreateEventCommand("Birthday plan", null, "birthday", null),
@@ -106,7 +109,8 @@ public sealed class CreateEventCommandHandlerTests
             repository.Object,
             outbox.Object,
             unitOfWork.Object,
-            timeProvider.Object);
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
             new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null),
@@ -134,7 +138,8 @@ public sealed class CreateEventCommandHandlerTests
             repository.Object,
             outbox.Object,
             unitOfWork.Object,
-            timeProvider.Object);
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
             new CreateEventCommand("Birthday plan", null, "conference", null),

@@ -1,6 +1,7 @@
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Events.GetEventList;
 using EventService.Domain.Events;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace EventService.UnitTests.Events.GetEventList;
@@ -18,7 +19,7 @@ public sealed class GetEventListQueryHandlerTests
             .Setup(repo => repo.ListAsync(It.IsAny<EventListQueryOptions>(), It.IsAny<CancellationToken>()))
             .Callback<EventListQueryOptions, CancellationToken>((options, _) => capturedOptions = options)
             .ReturnsAsync(new EventListPage(Array.Empty<PlannedEvent>(), 1, 20, 0));
-        var handler = new GetEventListQueryHandler(repository.Object, CreateTimeProvider());
+        var handler = CreateHandler(repository.Object);
 
         var result = await handler.Handle(
             new GetEventListQuery(null, null, null, null, null, null, null),
@@ -48,7 +49,7 @@ public sealed class GetEventListQueryHandlerTests
             .Setup(repo => repo.ListAsync(It.IsAny<EventListQueryOptions>(), It.IsAny<CancellationToken>()))
             .Callback<EventListQueryOptions, CancellationToken>((options, _) => capturedOptions = options)
             .ReturnsAsync(new EventListPage(Array.Empty<PlannedEvent>(), 3, 15, 0));
-        var handler = new GetEventListQueryHandler(repository.Object, CreateTimeProvider());
+        var handler = CreateHandler(repository.Object);
 
         await handler.Handle(
             new GetEventListQuery(3, 15, "  launch  ", "Wedding", "past", "updatedAt", "asc"),
@@ -79,7 +80,7 @@ public sealed class GetEventListQueryHandlerTests
         repository
             .Setup(repo => repo.ListAsync(It.IsAny<EventListQueryOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EventListPage(new[] { plannedEvent }, 2, 10, 25));
-        var handler = new GetEventListQueryHandler(repository.Object, CreateTimeProvider());
+        var handler = CreateHandler(repository.Object);
 
         var result = await handler.Handle(
             new GetEventListQuery(2, 10, null, null, null, null, null),
@@ -109,7 +110,7 @@ public sealed class GetEventListQueryHandlerTests
         repository
             .Setup(repo => repo.ListAsync(It.IsAny<EventListQueryOptions>(), cancellationTokenSource.Token))
             .ReturnsAsync(new EventListPage(Array.Empty<PlannedEvent>(), 1, 20, 0));
-        var handler = new GetEventListQueryHandler(repository.Object, CreateTimeProvider());
+        var handler = CreateHandler(repository.Object);
 
         await handler.Handle(
             new GetEventListQuery(null, null, null, null, null, null, null),
@@ -126,5 +127,13 @@ public sealed class GetEventListQueryHandlerTests
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(_now);
 
         return timeProvider.Object;
+    }
+
+    private GetEventListQueryHandler CreateHandler(IEventRepository repository)
+    {
+        return new GetEventListQueryHandler(
+            repository,
+            CreateTimeProvider(),
+            NullLogger<GetEventListQueryHandler>.Instance);
     }
 }

@@ -2,6 +2,7 @@ using EventService.Application.Events.CreateEvent;
 using EventService.Application.Events.GetEventDetails;
 using EventService.Application.Events.GetEventList;
 using EventService.Application.Events.UpdateEvent;
+using EventService.Api.Responses;
 using EventService.Contracts.Events;
 using FluentValidation;
 using MediatR;
@@ -35,6 +36,7 @@ internal static class EventEndpoints
 
     private static async Task<IResult> QueryEventsAsync(
         QueryEventsRequest request,
+        HttpContext httpContext,
         ISender sender,
         CancellationToken cancellationToken)
     {
@@ -73,12 +75,13 @@ internal static class EventEndpoints
         }
         catch (ValidationException exception)
         {
-            return Results.ValidationProblem(ToValidationErrors(exception));
+            return ApiErrorResults.ValidationProblem(ToValidationErrors(exception), httpContext);
         }
     }
 
     private static async Task<IResult> GetEventDetailsAsync(
         Guid eventId,
+        HttpContext httpContext,
         ISender sender,
         CancellationToken cancellationToken)
     {
@@ -86,7 +89,9 @@ internal static class EventEndpoints
 
         if (result is null)
         {
-            return Results.NotFound();
+            return ApiErrorResults.NotFound(
+                "The event was not found. It may have been deleted or the id may be incorrect.",
+                httpContext);
         }
 
         var response = new GetEventDetailsResponse(
@@ -104,6 +109,7 @@ internal static class EventEndpoints
 
     private static async Task<IResult> CreateEventAsync(
         CreateEventRequest request,
+        HttpContext httpContext,
         ISender sender,
         CancellationToken cancellationToken)
     {
@@ -131,13 +137,14 @@ internal static class EventEndpoints
         }
         catch (ValidationException exception)
         {
-            return Results.ValidationProblem(ToValidationErrors(exception));
+            return ApiErrorResults.ValidationProblem(ToValidationErrors(exception), httpContext);
         }
     }
 
     private static async Task<IResult> UpdateEventAsync(
         Guid id,
         UpdateEventRequest request,
+        HttpContext httpContext,
         ISender sender,
         CancellationToken cancellationToken)
     {
@@ -163,20 +170,20 @@ internal static class EventEndpoints
                     result.Event.CreatedAt,
                     result.Event.UpdatedAt,
                     result.Event.ConcurrencyToken)),
-                UpdateEventStatus.NotFound => Results.NotFound(),
-                UpdateEventStatus.Conflict => Results.Conflict(),
-                _ => Results.Problem("Unexpected update event result.")
+                UpdateEventStatus.NotFound => ApiErrorResults.NotFound(
+                    "The event was not found. It may have been deleted or the id may be incorrect.",
+                    httpContext),
+                UpdateEventStatus.Conflict => ApiErrorResults.Conflict(
+                    "This event was changed by someone else. Please refresh the event and try again.",
+                    httpContext),
+                _ => ApiErrorResults.Unexpected(
+                    "The event could not be updated right now. Please try again later.",
+                    httpContext)
             };
         }
         catch (ValidationException exception)
         {
-            var errors = exception.Errors
-                .GroupBy(error => error.PropertyName)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(error => error.ErrorMessage).ToArray());
-
-            return Results.ValidationProblem(errors);
+            return ApiErrorResults.ValidationProblem(ToValidationErrors(exception), httpContext);
         }
     }
 

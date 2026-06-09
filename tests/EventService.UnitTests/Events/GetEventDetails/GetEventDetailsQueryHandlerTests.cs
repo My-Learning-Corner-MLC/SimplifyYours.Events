@@ -1,6 +1,7 @@
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Events.GetEventDetails;
 using EventService.Domain.Events;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace EventService.UnitTests.Events.GetEventDetails;
@@ -24,7 +25,9 @@ public sealed class GetEventDetailsQueryHandlerTests
         repository
             .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), true))
             .ReturnsAsync(plannedEvent);
-        var handler = new GetEventDetailsQueryHandler(repository.Object);
+        var handler = new GetEventDetailsQueryHandler(
+            repository.Object,
+            NullLogger<GetEventDetailsQueryHandler>.Instance);
 
         var result = await handler.Handle(new GetEventDetailsQuery(eventId), CancellationToken.None);
 
@@ -50,7 +53,9 @@ public sealed class GetEventDetailsQueryHandlerTests
         repository
             .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), true))
             .ReturnsAsync((PlannedEvent?)null);
-        var handler = new GetEventDetailsQueryHandler(repository.Object);
+        var handler = new GetEventDetailsQueryHandler(
+            repository.Object,
+            NullLogger<GetEventDetailsQueryHandler>.Instance);
 
         var result = await handler.Handle(new GetEventDetailsQuery(eventId), CancellationToken.None);
 

@@ -16,7 +16,11 @@
       "launchUrl": "weatherforecast",
       "applicationUrl": "http://localhost:15001",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OTEL_SERVICE_NAME": "event-service",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+        "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.namespace=SimplifyYours,deployment.environment=local"
       }
     },
     "https": {
@@ -26,7 +30,11 @@
       "launchUrl": "weatherforecast",
       "applicationUrl": "https://localhost:15000;http://localhost:15001",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OTEL_SERVICE_NAME": "event-service",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+        "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.namespace=SimplifyYours,deployment.environment=local"
       }
     },
     "IIS Express": {
@@ -34,7 +42,11 @@
       "launchBrowser": true,
       "launchUrl": "weatherforecast",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OTEL_SERVICE_NAME": "event-service",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+        "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+        "OTEL_RESOURCE_ATTRIBUTES": "service.namespace=SimplifyYours,deployment.environment=local"
       }
     }
   }
