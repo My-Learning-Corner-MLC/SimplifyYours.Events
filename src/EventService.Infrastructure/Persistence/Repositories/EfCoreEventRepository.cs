@@ -2,15 +2,19 @@ using EventService.Application.Abstractions.Events;
 using EventService.Application.Events.GetEventList;
 using EventService.Domain.Events;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EventService.Infrastructure.Persistence.Repositories;
 
-internal sealed class EfCoreEventRepository(EventServiceDbContext dbContext) : IEventRepository
+internal sealed class EfCoreEventRepository(
+    EventServiceDbContext dbContext,
+    ILogger<EfCoreEventRepository> logger) : IEventRepository
 {
     public async Task AddAsync(PlannedEvent plannedEvent, CancellationToken cancellationToken)
     {
         await dbContext.Events.AddAsync(plannedEvent, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Event persisted. EventId: {EventId}.", plannedEvent.Id);
     }
 
     public async Task<EventListPage> ListAsync(EventListQueryOptions options, CancellationToken cancellationToken)
@@ -25,6 +29,13 @@ internal sealed class EfCoreEventRepository(EventServiceDbContext dbContext) : I
             .Skip((options.PageNumber - 1) * options.PageSize)
             .Take(options.PageSize)
             .ToListAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Event query executed. PageNumber: {PageNumber}. PageSize: {PageSize}. ReturnedCount: {ReturnedCount}. TotalCount: {TotalCount}.",
+            options.PageNumber,
+            options.PageSize,
+            items.Count,
+            totalCount);
 
         return new EventListPage(items, options.PageNumber, options.PageSize, totalCount);
     }
@@ -62,6 +73,7 @@ internal sealed class EfCoreEventRepository(EventServiceDbContext dbContext) : I
         }
         catch (DbUpdateConcurrencyException)
         {
+            logger.LogWarning("Event persistence concurrency conflict. EventId: {EventId}.", plannedEvent.Id);
             return false;
         }
     }

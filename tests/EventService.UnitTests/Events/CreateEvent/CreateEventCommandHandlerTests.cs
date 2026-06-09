@@ -1,6 +1,7 @@
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Events.CreateEvent;
 using EventService.Domain.Events;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace EventService.UnitTests.Events.CreateEvent;
@@ -20,7 +21,10 @@ public sealed class CreateEventCommandHandlerTests
             .Returns(Task.CompletedTask);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
-        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details"),
@@ -55,7 +59,10 @@ public sealed class CreateEventCommandHandlerTests
             .Returns(Task.CompletedTask);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
-        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new CreateEventCommand("Birthday plan", null, "birthday", null),
@@ -75,7 +82,10 @@ public sealed class CreateEventCommandHandlerTests
         var repository = new Mock<IEventRepository>();
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
-        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
             new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null),
@@ -93,7 +103,10 @@ public sealed class CreateEventCommandHandlerTests
         var repository = new Mock<IEventRepository>();
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
-        var handler = new CreateEventCommandHandler(repository.Object, timeProvider.Object);
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
             new CreateEventCommand("Birthday plan", null, "conference", null),
