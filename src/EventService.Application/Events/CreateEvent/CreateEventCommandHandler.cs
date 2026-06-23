@@ -17,14 +17,25 @@ public sealed class CreateEventCommandHandler(
     ILogger<CreateEventCommandHandler> logger)
     : IRequestHandler<CreateEventCommand, CreateEventResult>
 {
+    private const string CreateEventsPermission = "events.create";
+
     public async Task<CreateEventResult> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
+        var currentUser = request.CurrentUser
+            ?? throw new InvalidOperationException("Current user is required to create an event.");
+
+        if (!currentUser.HasPermission(CreateEventsPermission))
+        {
+            throw new UnauthorizedAccessException("Caller does not have permission to create events.");
+        }
+
         var now = timeProvider.GetUtcNow();
         var eventTime = ResolveEventTime(request.EventTime, now);
         var eventType = ResolveEventType(request.EventType);
 
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
+            currentUser.TenantId,
             request.EventName,
             eventTime,
             eventType,

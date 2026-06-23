@@ -10,11 +10,24 @@ public sealed class GetEventDetailsQueryHandler(
     ILogger<GetEventDetailsQueryHandler> logger)
     : IRequestHandler<GetEventDetailsQuery, GetEventDetailsResult?>
 {
+    private const string ViewEventsPermission = "events.view";
+
     public async Task<GetEventDetailsResult?> Handle(
         GetEventDetailsQuery request,
         CancellationToken cancellationToken)
     {
-        var plannedEvent = await eventRepository.GetByIdAsync(request.EventId, cancellationToken);
+        var currentUser = request.CurrentUser
+            ?? throw new InvalidOperationException("Current user is required to get event details.");
+
+        if (!currentUser.HasPermission(ViewEventsPermission))
+        {
+            throw new UnauthorizedAccessException("Caller does not have permission to view events.");
+        }
+
+        var plannedEvent = await eventRepository.GetByIdAsync(
+            request.EventId,
+            currentUser.TenantId,
+            cancellationToken);
 
         if (plannedEvent is null)
         {

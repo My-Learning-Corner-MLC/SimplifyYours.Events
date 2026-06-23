@@ -11,9 +11,20 @@ public sealed class GetEventListQueryHandler(
     ILogger<GetEventListQueryHandler> logger)
     : IRequestHandler<GetEventListQuery, GetEventListResult>
 {
+    private const string ViewEventsPermission = "events.view";
+
     public async Task<GetEventListResult> Handle(GetEventListQuery request, CancellationToken cancellationToken)
     {
+        var currentUser = request.CurrentUser
+            ?? throw new InvalidOperationException("Current user is required to list events.");
+
+        if (!currentUser.HasPermission(ViewEventsPermission))
+        {
+            throw new UnauthorizedAccessException("Caller does not have permission to view events.");
+        }
+
         var options = new EventListQueryOptions(
+            currentUser.TenantId,
             request.PageNumber ?? GetEventListQueryDefaults.PageNumber,
             request.PageSize ?? GetEventListQueryDefaults.PageSize,
             NormalizeOptionalText(request.Search),

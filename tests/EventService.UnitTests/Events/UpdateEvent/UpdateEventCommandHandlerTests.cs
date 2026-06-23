@@ -1,5 +1,6 @@
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
+using EventService.Application.Authorization;
 using EventService.Application.Events.UpdateEvent;
 using EventService.Domain.Events;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -15,8 +16,10 @@ public sealed class UpdateEventCommandHandlerTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventId = Guid.NewGuid();
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.update" });
         var plannedEvent = PlannedEvent.Create(
             eventId,
+            currentUser.TenantId,
             "Launch plan",
             now.AddDays(1),
             EventType.Event,
@@ -27,7 +30,7 @@ public sealed class UpdateEventCommandHandlerTests
         var newEventTime = now.AddDays(2);
         var repository = new Mock<IEventRepository>();
         repository
-            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), false))
+            .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), false))
             .ReturnsAsync(plannedEvent);
         repository
             .Setup(repo => repo.UpdateAsync(
@@ -39,8 +42,8 @@ public sealed class UpdateEventCommandHandlerTests
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
         var outbox = new Mock<IIntegrationEventOutbox>();
         var handler = new UpdateEventCommandHandler(
-            repository.Object, 
-            outbox.Object, 
+            repository.Object,
+            outbox.Object,
             timeProvider.Object,
             NullLogger<UpdateEventCommandHandler>.Instance);
 
@@ -50,7 +53,8 @@ public sealed class UpdateEventCommandHandlerTests
                 " Updated launch ",
                 newEventTime.ToString("O"),
                 " Updated details ",
-                expectedTokenText),
+                expectedTokenText,
+                currentUser),
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.Updated, result.Status);
@@ -64,7 +68,9 @@ public sealed class UpdateEventCommandHandlerTests
         Assert.Equal(now.AddMinutes(10), result.Event.UpdatedAt);
         Assert.False(string.IsNullOrWhiteSpace(result.Event.ConcurrencyToken));
         Assert.NotEqual(expectedTokenText, result.Event.ConcurrencyToken);
-        repository.Verify(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), false), Times.Once);
+        repository.Verify(
+            repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), false),
+            Times.Once);
         repository.Verify(
             repo => repo.UpdateAsync(
                 plannedEvent,
@@ -83,16 +89,17 @@ public sealed class UpdateEventCommandHandlerTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventId = Guid.NewGuid();
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.update" });
         var repository = new Mock<IEventRepository>();
         repository
-            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), false))
+            .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), false))
             .ReturnsAsync((PlannedEvent?)null);
         var timeProvider = new Mock<TimeProvider>();
         timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
         var outbox = new Mock<IIntegrationEventOutbox>();
         var handler = new UpdateEventCommandHandler(
-            repository.Object, 
-            outbox.Object, 
+            repository.Object,
+            outbox.Object,
             timeProvider.Object,
             NullLogger<UpdateEventCommandHandler>.Instance);
 
@@ -102,7 +109,8 @@ public sealed class UpdateEventCommandHandlerTests
                 "Updated launch",
                 now.AddDays(1).ToString("O"),
                 null,
-                Convert.ToBase64String(Guid.NewGuid().ToByteArray())),
+                Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
+                currentUser),
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.NotFound, result.Status);
@@ -122,8 +130,10 @@ public sealed class UpdateEventCommandHandlerTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventId = Guid.NewGuid();
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.update" });
         var plannedEvent = PlannedEvent.Create(
             eventId,
+            currentUser.TenantId,
             "Launch plan",
             now.AddDays(1),
             EventType.Event,
@@ -132,7 +142,7 @@ public sealed class UpdateEventCommandHandlerTests
         var expectedToken = plannedEvent.ConcurrencyToken;
         var repository = new Mock<IEventRepository>();
         repository
-            .Setup(repo => repo.GetByIdAsync(eventId, It.IsAny<CancellationToken>(), false))
+            .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), false))
             .ReturnsAsync(plannedEvent);
         repository
             .Setup(repo => repo.UpdateAsync(
@@ -155,12 +165,47 @@ public sealed class UpdateEventCommandHandlerTests
                 "Updated launch",
                 now.AddDays(2).ToString("O"),
                 null,
-                Convert.ToBase64String(expectedToken)),
+                Convert.ToBase64String(expectedToken),
+                currentUser),
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.Conflict, result.Status);
         outbox.Verify(
             publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCallerLacksUpdatePermission_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), Array.Empty<string>());
+        var repository = new Mock<IEventRepository>();
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
+            new UpdateEventCommand(
+                Guid.NewGuid(),
+                "Updated launch",
+                now.AddDays(1).ToString("O"),
+                null,
+                Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
+                currentUser),
+            CancellationToken.None));
+
+        repository.Verify(
+            repo => repo.GetByIdAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<bool>()),
+            Times.Never);
     }
 }

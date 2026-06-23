@@ -3,6 +3,7 @@ using EventService.Application.Events.GetEventDetails;
 using EventService.Application.Events.GetEventList;
 using EventService.Application.Events.UpdateEvent;
 using EventService.Api.Responses;
+using EventService.Api.Security;
 using EventService.Contracts.Events;
 using FluentValidation;
 using MediatR;
@@ -13,7 +14,7 @@ internal static class EventEndpoints
 {
     public static IEndpointRouteBuilder MapEventEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/events").WithTags("Events");
+        var group = endpoints.MapGroup("/events").WithTags("Events").RequireAuthorization();
 
         group
             .MapPost("", CreateEventAsync)
@@ -40,6 +41,11 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
+        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
+        {
+            return Results.Challenge();
+        }
+
         try
         {
             var result = await sender.Send(
@@ -50,7 +56,8 @@ internal static class EventEndpoints
                     request.EventType,
                     request.TimeFilter,
                     request.SortBy,
-                    request.SortDirection),
+                    request.SortDirection,
+                    currentUser),
                 cancellationToken);
 
             var response = new QueryEventsResponse(
@@ -85,7 +92,12 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetEventDetailsQuery(eventId), cancellationToken);
+        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
+        {
+            return Results.Challenge();
+        }
+
+        var result = await sender.Send(new GetEventDetailsQuery(eventId, currentUser), cancellationToken);
 
         if (result is null)
         {
@@ -113,6 +125,11 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
+        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
+        {
+            return Results.Challenge();
+        }
+
         try
         {
             var result = await sender.Send(
@@ -120,7 +137,8 @@ internal static class EventEndpoints
                     request.EventName,
                     request.EventTime,
                     request.EventType,
-                    request.EventDescription),
+                    request.EventDescription,
+                    currentUser),
                 cancellationToken);
 
             var response = new CreateEventResponse(
@@ -148,6 +166,11 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
+        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
+        {
+            return Results.Challenge();
+        }
+
         try
         {
             var result = await sender.Send(
@@ -156,7 +179,8 @@ internal static class EventEndpoints
                     request.EventName,
                     request.EventTime,
                     request.EventDescription,
-                    request.ConcurrencyToken),
+                    request.ConcurrencyToken,
+                    currentUser),
                 cancellationToken);
 
             return result.Status switch

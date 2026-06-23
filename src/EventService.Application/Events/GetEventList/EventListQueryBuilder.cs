@@ -10,6 +10,7 @@ public static class EventListQueryBuilder
         EventListQueryOptions options)
     {
         query = query.Where(plannedEvent => !plannedEvent.IsDeleted);
+        query = query.Where(plannedEvent => plannedEvent.TenantId == options.TenantId);
         query = ApplySearch(query, options.Search);
         query = ApplyEventTypeFilter(query, options.EventType);
         query = ApplyTimeFilter(query, options.TimeFilter, options.CurrentUtcDateTime);
