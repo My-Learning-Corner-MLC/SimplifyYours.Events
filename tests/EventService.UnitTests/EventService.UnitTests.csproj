@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\EventService.Api\EventService.Api.csproj" />
     <ProjectReference Include="..\..\src\EventService.Application\EventService.Application.csproj" />
     <ProjectReference Include="..\..\src\EventService.Contracts\EventService.Contracts.csproj" />
     <ProjectReference Include="..\..\src\EventService.Domain\EventService.Domain.csproj" />
