@@ -58,6 +58,12 @@ public class EndpointPolicyMappingTests
             policies);
     }
 
+    // AddInfrastructure is intentionally omitted so the test does not attempt
+    // a Postgres / Kafka / Redis connection. WebApplication.CreateBuilder() is
+    // used without arguments per plan Task 8: the test stays infrastructure-free
+    // by only registering the services that minimal-API endpoint construction
+    // actually requires (routing, permission policies, ISender for handler
+    // parameter binding).
     private static IReadOnlyList<Endpoint> MapEventEndpointsForTest()
     {
         var builder = WebApplication.CreateBuilder();

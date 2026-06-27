@@ -33,7 +33,7 @@ internal static class ApiErrorResults
 
     public static IResult Forbidden(string message, HttpContext? context = null)
     {
-        return Problem(StatusCodes.Status403Forbidden, "You are not allowed to perform this action.", message, context);
+        return Problem(StatusCodes.Status403Forbidden, "Forbidden.", message, context);
     }
 
     public static ProblemDetails CreateProblemDetails(HttpContext context, int statusCode, string title, string message)

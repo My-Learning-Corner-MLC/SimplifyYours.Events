@@ -5,17 +5,15 @@ namespace EventService.Api.Security;
 
 internal static class AuthorizationExtensions
 {
-    public const string PermissionClaimType = "permissions";
-
     public static IServiceCollection AddPermissionPolicies(this IServiceCollection services)
     {
         services.AddAuthorizationBuilder()
             .AddPolicy(Permissions.EventsCreate, policy =>
-                policy.RequireClaim(PermissionClaimType, Permissions.EventsCreate))
+                policy.RequireClaim(Permissions.ClaimType, Permissions.EventsCreate))
             .AddPolicy(Permissions.EventsView, policy =>
-                policy.RequireClaim(PermissionClaimType, Permissions.EventsView))
+                policy.RequireClaim(Permissions.ClaimType, Permissions.EventsView))
             .AddPolicy(Permissions.EventsUpdate, policy =>
-                policy.RequireClaim(PermissionClaimType, Permissions.EventsUpdate));
+                policy.RequireClaim(Permissions.ClaimType, Permissions.EventsUpdate));
 
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, PermissionDeniedResultHandler>();
 
