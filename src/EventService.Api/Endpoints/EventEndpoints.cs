@@ -14,23 +14,27 @@ internal static class EventEndpoints
 {
     public static IEndpointRouteBuilder MapEventEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/events").WithTags("Events").RequireAuthorization();
+        var group = endpoints.MapGroup("/events").WithTags("Events");
 
         group
             .MapPost("", CreateEventAsync)
-            .WithName("CreateEvent");
+            .WithName("CreateEvent")
+            .RequireAuthorization(Permissions.EventsCreate);
 
         group
             .MapPost("/query", QueryEventsAsync)
-            .WithName("QueryEvents");
+            .WithName("QueryEvents")
+            .RequireAuthorization(Permissions.EventsView);
 
         group
             .MapGet("{eventId:guid}", GetEventDetailsAsync)
-            .WithName("GetEventDetails");
+            .WithName("GetEventDetails")
+            .RequireAuthorization(Permissions.EventsView);
 
         group
             .MapPut("{id:guid}", UpdateEventAsync)
-            .WithName("UpdateEvent");
+            .WithName("UpdateEvent")
+            .RequireAuthorization(Permissions.EventsUpdate);
 
         return endpoints;
     }
