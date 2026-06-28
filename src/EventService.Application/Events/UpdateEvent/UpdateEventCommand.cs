@@ -8,5 +8,4 @@ public sealed record UpdateEventCommand(
     string EventName,
     string EventTime,
     string? EventDescription,
-    string ConcurrencyToken,
-    CurrentUser? CurrentUser = null) : IRequest<UpdateEventResult>;
+    string ConcurrencyToken) : BaseCommand, IRequest<UpdateEventResult>;

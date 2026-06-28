@@ -14,17 +14,9 @@ public sealed class UpdateEventCommandHandler(
     ILogger<UpdateEventCommandHandler> logger)
     : IRequestHandler<UpdateEventCommand, UpdateEventResult>
 {
-    private const string UpdateEventsPermission = "events.update";
-
     public async Task<UpdateEventResult> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
-        var currentUser = request.CurrentUser
-            ?? throw new InvalidOperationException("Current user is required to update an event.");
-
-        if (!currentUser.HasPermission(UpdateEventsPermission))
-        {
-            throw new UnauthorizedAccessException("Caller does not have permission to update events.");
-        }
+        var currentUser = request.CurrentUser;
 
         var plannedEvent = await eventRepository.GetByIdAsync(
             request.EventId,

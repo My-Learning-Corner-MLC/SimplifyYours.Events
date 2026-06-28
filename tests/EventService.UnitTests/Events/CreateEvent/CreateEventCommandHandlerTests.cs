@@ -14,8 +14,7 @@ public sealed class CreateEventCommandHandlerTests
 {
     private static readonly CurrentUser TestUser = new(
         Guid.Parse("1ed66a76-8c3e-4cef-b53f-3b6acb318b45"),
-        Guid.Parse("2c1e22fb-7c11-44a4-9fc8-3e2c4f9d8a01"),
-        new[] { "events.create" });
+        Guid.Parse("2c1e22fb-7c11-44a4-9fc8-3e2c4f9d8a01"));
 
     [Fact]
     public async Task Handle_CreatesAndSavesEvent()
@@ -40,7 +39,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details", TestUser),
+            new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details")
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result.Event.Id);
@@ -89,7 +91,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new CreateEventCommand("Birthday plan", null, "birthday", null, TestUser),
+            new CreateEventCommand("Birthday plan", null, "birthday", null)
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None);
 
         Assert.Equal(now, result.Event.EventTime);
@@ -120,7 +125,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
-            new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null, TestUser),
+            new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null)
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None));
 
         repository.Verify(
@@ -149,7 +157,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
-            new CreateEventCommand("Birthday plan", null, "conference", null, TestUser),
+            new CreateEventCommand("Birthday plan", null, "conference", null)
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None));
 
         repository.Verify(

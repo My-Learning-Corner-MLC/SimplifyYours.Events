@@ -45,11 +45,6 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
-        {
-            return Results.Challenge();
-        }
-
         try
         {
             var result = await sender.Send(
@@ -60,8 +55,7 @@ internal static class EventEndpoints
                     request.EventType,
                     request.TimeFilter,
                     request.SortBy,
-                    request.SortDirection,
-                    currentUser),
+                    request.SortDirection),
                 cancellationToken);
 
             var response = new QueryEventsResponse(
@@ -96,12 +90,7 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
-        {
-            return Results.Challenge();
-        }
-
-        var result = await sender.Send(new GetEventDetailsQuery(eventId, currentUser), cancellationToken);
+        var result = await sender.Send(new GetEventDetailsQuery(eventId), cancellationToken);
 
         if (result is null)
         {
@@ -129,11 +118,6 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
-        {
-            return Results.Challenge();
-        }
-
         try
         {
             var result = await sender.Send(
@@ -141,8 +125,7 @@ internal static class EventEndpoints
                     request.EventName,
                     request.EventTime,
                     request.EventType,
-                    request.EventDescription,
-                    currentUser),
+                    request.EventDescription),
                 cancellationToken);
 
             var response = new CreateEventResponse(
@@ -170,11 +153,6 @@ internal static class EventEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
-        if (!CurrentUserResolver.TryResolve(httpContext.User, out var currentUser))
-        {
-            return Results.Challenge();
-        }
-
         try
         {
             var result = await sender.Send(
@@ -183,8 +161,7 @@ internal static class EventEndpoints
                     request.EventName,
                     request.EventTime,
                     request.EventDescription,
-                    request.ConcurrencyToken,
-                    currentUser),
+                    request.ConcurrencyToken),
                 cancellationToken);
 
             return result.Status switch

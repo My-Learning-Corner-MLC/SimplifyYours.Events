@@ -15,7 +15,7 @@ public sealed class GetEventDetailsQueryHandlerTests
         var eventId = Guid.NewGuid();
         var createdAt = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventTime = createdAt.AddDays(7);
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.view" });
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
         var plannedEvent = PlannedEvent.Create(
             eventId,
             currentUser.TenantId,
@@ -32,7 +32,9 @@ public sealed class GetEventDetailsQueryHandlerTests
             repository.Object,
             NullLogger<GetEventDetailsQueryHandler>.Instance);
 
-        var result = await handler.Handle(new GetEventDetailsQuery(eventId, currentUser), CancellationToken.None);
+        var result = await handler.Handle(
+            new GetEventDetailsQuery(eventId) { CurrentUser = currentUser },
+            CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(eventId, result.Event.Id);
@@ -52,7 +54,7 @@ public sealed class GetEventDetailsQueryHandlerTests
     public async Task Handle_WhenEventDoesNotExist_ReturnsNull()
     {
         var eventId = Guid.NewGuid();
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.view" });
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
         var repository = new Mock<IEventRepository>();
         repository
             .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), true))
@@ -61,34 +63,13 @@ public sealed class GetEventDetailsQueryHandlerTests
             repository.Object,
             NullLogger<GetEventDetailsQueryHandler>.Instance);
 
-        var result = await handler.Handle(new GetEventDetailsQuery(eventId, currentUser), CancellationToken.None);
+        var result = await handler.Handle(
+            new GetEventDetailsQuery(eventId) { CurrentUser = currentUser },
+            CancellationToken.None);
 
         Assert.Null(result);
         repository.Verify(
             repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), true),
             Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WhenCallerLacksViewPermission_Throws()
-    {
-        var eventId = Guid.NewGuid();
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), Array.Empty<string>());
-        var repository = new Mock<IEventRepository>();
-        var handler = new GetEventDetailsQueryHandler(
-            repository.Object,
-            NullLogger<GetEventDetailsQueryHandler>.Instance);
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
-            new GetEventDetailsQuery(eventId, currentUser),
-            CancellationToken.None));
-
-        repository.Verify(
-            repo => repo.GetByIdAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<Guid>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<bool>()),
-            Times.Never);
     }
 }

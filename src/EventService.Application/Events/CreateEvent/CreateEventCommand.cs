@@ -7,5 +7,4 @@ public sealed record CreateEventCommand(
     string EventName,
     string? EventTime,
     string EventType,
-    string? EventDescription,
-    CurrentUser? CurrentUser = null) : IRequest<CreateEventResult>;
+    string? EventDescription) : BaseCommand, IRequest<CreateEventResult>;

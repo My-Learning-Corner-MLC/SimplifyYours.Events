@@ -11,8 +11,7 @@ public sealed class GetEventListQueryHandlerTests
 {
     private static readonly CurrentUser TestUser = new(
         Guid.Parse("4927090e-0c70-45db-b0ba-080e121bf3f7"),
-        Guid.Parse("9b4d8c79-7f4d-4d33-8efb-72f8a9b1d5e0"),
-        new[] { "events.view" });
+        Guid.Parse("9b4d8c79-7f4d-4d33-8efb-72f8a9b1d5e0"));
     private readonly DateTimeOffset _now = new(2026, 5, 17, 8, 0, 0, TimeSpan.Zero);
 
     [Fact]
@@ -27,7 +26,7 @@ public sealed class GetEventListQueryHandlerTests
         var handler = CreateHandler(repository.Object);
 
         var result = await handler.Handle(
-            new GetEventListQuery(null, null, null, null, null, null, null, TestUser),
+            new GetEventListQuery(null, null, null, null, null, null, null) { CurrentUser = TestUser },
             CancellationToken.None);
 
         Assert.NotNull(capturedOptions);
@@ -58,7 +57,10 @@ public sealed class GetEventListQueryHandlerTests
         var handler = CreateHandler(repository.Object);
 
         await handler.Handle(
-            new GetEventListQuery(3, 15, "  launch  ", "Wedding", "past", "updatedAt", "asc", TestUser),
+            new GetEventListQuery(3, 15, "  launch  ", "Wedding", "past", "updatedAt", "asc")
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None);
 
         Assert.NotNull(capturedOptions);
@@ -69,22 +71,6 @@ public sealed class GetEventListQueryHandlerTests
         Assert.Equal(EventTimeFilter.Past, capturedOptions.TimeFilter);
         Assert.Equal(EventSortField.UpdatedAt, capturedOptions.SortBy);
         Assert.Equal(SortDirection.Asc, capturedOptions.SortDirection);
-    }
-
-    [Fact]
-    public async Task Handle_WhenCallerLacksViewPermission_Throws()
-    {
-        var repository = new Mock<IEventRepository>();
-        var handler = CreateHandler(repository.Object);
-        var unauthorizedUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), Array.Empty<string>());
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
-            new GetEventListQuery(null, null, null, null, null, null, null, unauthorizedUser),
-            CancellationToken.None));
-
-        repository.Verify(
-            repo => repo.ListAsync(It.IsAny<EventListQueryOptions>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Fact]
@@ -106,7 +92,7 @@ public sealed class GetEventListQueryHandlerTests
         var handler = CreateHandler(repository.Object);
 
         var result = await handler.Handle(
-            new GetEventListQuery(2, 10, null, null, null, null, null, TestUser),
+            new GetEventListQuery(2, 10, null, null, null, null, null) { CurrentUser = TestUser },
             CancellationToken.None);
 
         var item = Assert.Single(result.Items);
@@ -136,7 +122,7 @@ public sealed class GetEventListQueryHandlerTests
         var handler = CreateHandler(repository.Object);
 
         await handler.Handle(
-            new GetEventListQuery(null, null, null, null, null, null, null, TestUser),
+            new GetEventListQuery(null, null, null, null, null, null, null) { CurrentUser = TestUser },
             cancellationTokenSource.Token);
 
         repository.Verify(

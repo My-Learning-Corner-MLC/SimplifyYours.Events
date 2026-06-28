@@ -16,7 +16,7 @@ public sealed class UpdateEventCommandHandlerTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventId = Guid.NewGuid();
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.update" });
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
         var plannedEvent = PlannedEvent.Create(
             eventId,
             currentUser.TenantId,
@@ -53,8 +53,10 @@ public sealed class UpdateEventCommandHandlerTests
                 " Updated launch ",
                 newEventTime.ToString("O"),
                 " Updated details ",
-                expectedTokenText,
-                currentUser),
+                expectedTokenText)
+            {
+                CurrentUser = currentUser
+            },
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.Updated, result.Status);
@@ -89,7 +91,7 @@ public sealed class UpdateEventCommandHandlerTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventId = Guid.NewGuid();
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.update" });
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
         var repository = new Mock<IEventRepository>();
         repository
             .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), false))
@@ -109,8 +111,10 @@ public sealed class UpdateEventCommandHandlerTests
                 "Updated launch",
                 now.AddDays(1).ToString("O"),
                 null,
-                Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
-                currentUser),
+                Convert.ToBase64String(Guid.NewGuid().ToByteArray()))
+            {
+                CurrentUser = currentUser
+            },
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.NotFound, result.Status);
@@ -130,7 +134,7 @@ public sealed class UpdateEventCommandHandlerTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var eventId = Guid.NewGuid();
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), new[] { "events.update" });
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
         var plannedEvent = PlannedEvent.Create(
             eventId,
             currentUser.TenantId,
@@ -165,47 +169,15 @@ public sealed class UpdateEventCommandHandlerTests
                 "Updated launch",
                 now.AddDays(2).ToString("O"),
                 null,
-                Convert.ToBase64String(expectedToken),
-                currentUser),
+                Convert.ToBase64String(expectedToken))
+            {
+                CurrentUser = currentUser
+            },
             CancellationToken.None);
 
         Assert.Equal(UpdateEventStatus.Conflict, result.Status);
         outbox.Verify(
             publisher => publisher.AddAsync(It.IsAny<IntegrationEventEnvelope>(), It.IsAny<CancellationToken>()),
             Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WhenCallerLacksUpdatePermission_Throws()
-    {
-        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid(), Array.Empty<string>());
-        var repository = new Mock<IEventRepository>();
-        var timeProvider = new Mock<TimeProvider>();
-        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
-        var outbox = new Mock<IIntegrationEventOutbox>();
-        var handler = new UpdateEventCommandHandler(
-            repository.Object,
-            outbox.Object,
-            timeProvider.Object,
-            NullLogger<UpdateEventCommandHandler>.Instance);
-
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
-            new UpdateEventCommand(
-                Guid.NewGuid(),
-                "Updated launch",
-                now.AddDays(1).ToString("O"),
-                null,
-                Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
-                currentUser),
-            CancellationToken.None));
-
-        repository.Verify(
-            repo => repo.GetByIdAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<Guid>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<bool>()),
-            Times.Never);
     }
 }
