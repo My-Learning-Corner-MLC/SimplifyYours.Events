@@ -3,4 +3,4 @@ using MediatR;
 
 namespace EventService.Application.Events.GetEventDetails;
 
-public sealed record GetEventDetailsQuery(Guid EventId) : BaseCommand, IRequest<GetEventDetailsResult?>;
+public sealed record GetEventDetailsQuery(Guid EventId) : BaseQuery, IRequest<GetEventDetailsResult?>;

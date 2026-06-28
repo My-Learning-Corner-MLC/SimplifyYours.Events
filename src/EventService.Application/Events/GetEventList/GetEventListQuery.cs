@@ -10,4 +10,4 @@ public sealed record GetEventListQuery(
     string? EventType,
     string? TimeFilter,
     string? SortBy,
-    string? SortDirection) : BaseCommand, IRequest<GetEventListResult>;
+    string? SortDirection) : BaseQuery, IRequest<GetEventListResult>;
