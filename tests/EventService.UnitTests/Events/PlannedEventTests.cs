@@ -171,6 +171,72 @@ public sealed class PlannedEventTests
     }
 
     [Fact]
+    public void Create_WithLocationAndTimeZone_StoresBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var location = EventLocation.Create(
+            "The Backyard",
+            "414 Maple Street, Brooklyn, NY 11215",
+            "https://meet.example.com/party",
+            "Side gate unlocked from 1:30.");
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Mateo turns five",
+            now.AddDays(1),
+            EventType.Birthday,
+            null,
+            now,
+            location,
+            "America/Los_Angeles");
+
+        Assert.NotNull(plannedEvent.Location);
+        Assert.Equal("The Backyard", plannedEvent.Location.VenueName);
+        Assert.Equal("414 Maple Street, Brooklyn, NY 11215", plannedEvent.Location.Address);
+        Assert.Equal("https://meet.example.com/party", plannedEvent.Location.OnlineUrl);
+        Assert.Equal("Side gate unlocked from 1:30.", plannedEvent.Location.Notes);
+        Assert.Equal("America/Los_Angeles", plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void Create_WithoutLocationAndTimeZone_StoresNulls()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Launch,
+            null,
+            now);
+
+        Assert.Null(plannedEvent.Location);
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void Create_WhenTimeZoneIdIsBlank_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: "  ");
+
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
     public void Create_WhenDescriptionIsBlank_StoresNull()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);

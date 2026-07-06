@@ -13,7 +13,9 @@ public sealed class PlannedEvent
         DateTimeOffset eventTime,
         EventType type,
         string? description,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        EventLocation? location,
+        string? timeZoneId)
     {
         Id = id;
         TenantId = tenantId;
@@ -21,6 +23,8 @@ public sealed class PlannedEvent
         EventTime = eventTime;
         Type = type;
         Description = NormalizeOptionalText(description);
+        Location = location;
+        TimeZoneId = NormalizeOptionalText(timeZoneId);
         IsDeleted = false;
         DeletedAt = null;
         CreatedAt = createdAt;
@@ -40,6 +44,10 @@ public sealed class PlannedEvent
 
     public string? Description { get; private set; }
 
+    public EventLocation? Location { get; private set; }
+
+    public string? TimeZoneId { get; private set; }
+
     public bool IsDeleted { get; private set; }
 
     public DateTimeOffset? DeletedAt { get; private set; }
@@ -57,7 +65,9 @@ public sealed class PlannedEvent
         DateTimeOffset eventTime,
         EventType type,
         string? description,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        EventLocation? location = null,
+        string? timeZoneId = null)
     {
         if (id == Guid.Empty)
         {
@@ -88,7 +98,9 @@ public sealed class PlannedEvent
             eventTime.ToUniversalTime(),
             type,
             description,
-            createdAt.ToUniversalTime());
+            createdAt.ToUniversalTime(),
+            location,
+            timeZoneId);
     }
 
     public void UpdateDetails(
