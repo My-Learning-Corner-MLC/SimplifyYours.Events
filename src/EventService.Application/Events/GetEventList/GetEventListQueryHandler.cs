@@ -13,7 +13,10 @@ public sealed class GetEventListQueryHandler(
 {
     public async Task<GetEventListResult> Handle(GetEventListQuery request, CancellationToken cancellationToken)
     {
+        var currentUser = request.CurrentUser;
+
         var options = new EventListQueryOptions(
+            currentUser.TenantId,
             request.PageNumber ?? GetEventListQueryDefaults.PageNumber,
             request.PageSize ?? GetEventListQueryDefaults.PageSize,
             NormalizeOptionalText(request.Search),

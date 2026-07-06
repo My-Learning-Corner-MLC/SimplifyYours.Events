@@ -13,6 +13,7 @@ public sealed class PlannedEventTests
 
         var plannedEvent = PlannedEvent.Create(
             eventId,
+            Guid.NewGuid(),
             " Product launch ",
             eventTime,
             EventType.Event,
@@ -36,6 +37,7 @@ public sealed class PlannedEventTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),
@@ -68,6 +70,7 @@ public sealed class PlannedEventTests
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),
             EventType.Event,
@@ -84,6 +87,7 @@ public sealed class PlannedEventTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),
@@ -105,6 +109,7 @@ public sealed class PlannedEventTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             "Wedding plan",
             now.AddDays(10),
@@ -138,6 +143,7 @@ public sealed class PlannedEventTests
 
         var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
             Guid.Empty,
+            Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),
             EventType.Event,
@@ -153,6 +159,7 @@ public sealed class PlannedEventTests
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
 
         var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             "  ",
             now.AddDays(1),
@@ -170,6 +177,7 @@ public sealed class PlannedEventTests
 
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),
             EventType.Event,
@@ -184,6 +192,7 @@ public sealed class PlannedEventTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),
@@ -207,6 +216,7 @@ public sealed class PlannedEventTests
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
             now.AddDays(1),

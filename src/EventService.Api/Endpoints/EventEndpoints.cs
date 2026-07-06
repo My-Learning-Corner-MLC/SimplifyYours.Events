@@ -3,6 +3,7 @@ using EventService.Application.Events.GetEventDetails;
 using EventService.Application.Events.GetEventList;
 using EventService.Application.Events.UpdateEvent;
 using EventService.Api.Responses;
+using EventService.Api.Security;
 using EventService.Contracts.Events;
 using FluentValidation;
 using MediatR;
@@ -17,19 +18,23 @@ internal static class EventEndpoints
 
         group
             .MapPost("", CreateEventAsync)
-            .WithName("CreateEvent");
+            .WithName("CreateEvent")
+            .RequireAuthorization(Permissions.EventsCreate);
 
         group
             .MapPost("/query", QueryEventsAsync)
-            .WithName("QueryEvents");
+            .WithName("QueryEvents")
+            .RequireAuthorization(Permissions.EventsView);
 
         group
             .MapGet("{eventId:guid}", GetEventDetailsAsync)
-            .WithName("GetEventDetails");
+            .WithName("GetEventDetails")
+            .RequireAuthorization(Permissions.EventsView);
 
         group
             .MapPut("{id:guid}", UpdateEventAsync)
-            .WithName("UpdateEvent");
+            .WithName("UpdateEvent")
+            .RequireAuthorization(Permissions.EventsUpdate);
 
         return endpoints;
     }

@@ -1,6 +1,7 @@
 using EventService.Application.Abstractions.Common;
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
+using EventService.Application.Authorization;
 using EventService.Application.Events.CreateEvent;
 using EventService.Domain.Events;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,6 +12,10 @@ namespace EventService.UnitTests.Events.CreateEvent;
 
 public sealed class CreateEventCommandHandlerTests
 {
+    private static readonly CurrentUser TestUser = new(
+        Guid.Parse("1ed66a76-8c3e-4cef-b53f-3b6acb318b45"),
+        Guid.Parse("2c1e22fb-7c11-44a4-9fc8-3e2c4f9d8a01"));
+
     [Fact]
     public async Task Handle_CreatesAndSavesEvent()
     {
@@ -34,7 +39,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details"),
+            new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details")
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result.Event.Id);
@@ -47,6 +55,7 @@ public sealed class CreateEventCommandHandlerTests
         Assert.False(string.IsNullOrWhiteSpace(result.Event.ConcurrencyToken));
         Assert.NotNull(savedEvent);
         Assert.Equal(result.Event.Id, savedEvent.Id);
+        Assert.Equal(TestUser.TenantId, savedEvent.TenantId);
         Assert.False(savedEvent.IsDeleted);
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
@@ -82,7 +91,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new CreateEventCommand("Birthday plan", null, "birthday", null),
+            new CreateEventCommand("Birthday plan", null, "birthday", null)
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None);
 
         Assert.Equal(now, result.Event.EventTime);
@@ -113,7 +125,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
-            new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null),
+            new CreateEventCommand("Birthday plan", "not-a-date", "birthday", null)
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None));
 
         repository.Verify(
@@ -142,7 +157,10 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         await Assert.ThrowsAsync<ArgumentException>(() => handler.Handle(
-            new CreateEventCommand("Birthday plan", null, "conference", null),
+            new CreateEventCommand("Birthday plan", null, "conference", null)
+            {
+                CurrentUser = TestUser
+            },
             CancellationToken.None));
 
         repository.Verify(

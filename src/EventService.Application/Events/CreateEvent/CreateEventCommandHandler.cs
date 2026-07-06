@@ -19,12 +19,14 @@ public sealed class CreateEventCommandHandler(
 {
     public async Task<CreateEventResult> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
+        var currentUser = request.CurrentUser;
         var now = timeProvider.GetUtcNow();
         var eventTime = ResolveEventTime(request.EventTime, now);
         var eventType = ResolveEventType(request.EventType);
 
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
+            currentUser.TenantId,
             request.EventName,
             eventTime,
             eventType,

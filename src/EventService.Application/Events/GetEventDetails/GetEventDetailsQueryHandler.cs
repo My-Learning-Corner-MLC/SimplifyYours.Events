@@ -14,7 +14,12 @@ public sealed class GetEventDetailsQueryHandler(
         GetEventDetailsQuery request,
         CancellationToken cancellationToken)
     {
-        var plannedEvent = await eventRepository.GetByIdAsync(request.EventId, cancellationToken);
+        var currentUser = request.CurrentUser;
+
+        var plannedEvent = await eventRepository.GetByIdAsync(
+            request.EventId,
+            currentUser.TenantId,
+            cancellationToken);
 
         if (plannedEvent is null)
         {

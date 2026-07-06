@@ -63,6 +63,10 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("character varying(200)")
                 .HasColumnName("name");
 
+            b.Property<Guid>("TenantId")
+                .HasColumnType("uuid")
+                .HasColumnName("tenant_id");
+
             b.Property<EventType>("Type")
                 .IsRequired()
                 .HasConversion<string>()
@@ -79,6 +83,9 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
 
             b.HasIndex("IsDeleted", "EventTime")
                 .HasDatabaseName("ix_events_is_deleted_event_time");
+
+            b.HasIndex("TenantId", "IsDeleted", "EventTime")
+                .HasDatabaseName("ix_events_tenant_id_is_deleted_event_time");
 
             b.ToTable("events", (string)null);
         });

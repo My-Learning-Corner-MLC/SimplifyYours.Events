@@ -1,0 +1,6 @@
+namespace EventService.Application.Authorization;
+
+public abstract record BaseCommand : IAuthenticatedRequest
+{
+    public CurrentUser CurrentUser { get; set; } = null!;
+}

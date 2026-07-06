@@ -1,3 +1,4 @@
+using EventService.Application.Authorization;
 using MediatR;
 
 namespace EventService.Application.Events.GetEventList;
@@ -9,4 +10,4 @@ public sealed record GetEventListQuery(
     string? EventType,
     string? TimeFilter,
     string? SortBy,
-    string? SortDirection) : IRequest<GetEventListResult>;
+    string? SortDirection) : BaseQuery, IRequest<GetEventListResult>;

@@ -16,8 +16,11 @@ public sealed class UpdateEventCommandHandler(
 {
     public async Task<UpdateEventResult> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
+        var currentUser = request.CurrentUser;
+
         var plannedEvent = await eventRepository.GetByIdAsync(
             request.EventId,
+            currentUser.TenantId,
             cancellationToken,
             asNoTracking: false);
 

@@ -10,6 +10,7 @@ public interface IEventRepository
 
     Task<PlannedEvent?> GetByIdAsync(
         Guid eventId,
+        Guid tenantId,
         CancellationToken cancellationToken,
         bool asNoTracking = true);
 

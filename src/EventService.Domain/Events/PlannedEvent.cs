@@ -8,6 +8,7 @@ public sealed class PlannedEvent
 
     private PlannedEvent(
         Guid id,
+        Guid tenantId,
         string name,
         DateTimeOffset eventTime,
         EventType type,
@@ -15,6 +16,7 @@ public sealed class PlannedEvent
         DateTimeOffset createdAt)
     {
         Id = id;
+        TenantId = tenantId;
         Name = name;
         EventTime = eventTime;
         Type = type;
@@ -27,6 +29,8 @@ public sealed class PlannedEvent
     }
 
     public Guid Id { get; private set; }
+
+    public Guid TenantId { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
 
@@ -48,6 +52,7 @@ public sealed class PlannedEvent
 
     public static PlannedEvent Create(
         Guid id,
+        Guid tenantId,
         string name,
         DateTimeOffset eventTime,
         EventType type,
@@ -57,6 +62,11 @@ public sealed class PlannedEvent
         if (id == Guid.Empty)
         {
             throw new ArgumentException("Event id must not be empty.", nameof(id));
+        }
+
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant id must not be empty.", nameof(tenantId));
         }
 
         if (string.IsNullOrWhiteSpace(name))
@@ -71,7 +81,14 @@ public sealed class PlannedEvent
             throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
         }
 
-        return new PlannedEvent(id, normalizedName, eventTime.ToUniversalTime(), type, description, createdAt.ToUniversalTime());
+        return new PlannedEvent(
+            id,
+            tenantId,
+            normalizedName,
+            eventTime.ToUniversalTime(),
+            type,
+            description,
+            createdAt.ToUniversalTime());
     }
 
     public void UpdateDetails(

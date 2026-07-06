@@ -149,12 +149,15 @@ public sealed class EventListQueryBuilderTests
         Assert.Equal(new[] { "Older modified", "Newer modified" }, result);
     }
 
+    private static readonly Guid TestTenantId = Guid.Parse("8f10c8b2-12a4-4d6f-9301-7c52e84b7d20");
+
     private EventListQueryOptions CreateOptions(
         string? search = null,
         EventType? eventType = null,
         EventTimeFilter timeFilter = EventTimeFilter.All)
     {
         return new EventListQueryOptions(
+            TestTenantId,
             1,
             20,
             search,
@@ -174,6 +177,7 @@ public sealed class EventListQueryBuilderTests
     {
         return PlannedEvent.Create(
             Guid.NewGuid(),
+            TestTenantId,
             name,
             eventTime,
             eventType,

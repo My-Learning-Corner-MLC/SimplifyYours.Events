@@ -16,6 +16,10 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .HasColumnName("id")
             .ValueGeneratedNever();
 
+        builder.Property(plannedEvent => plannedEvent.TenantId)
+            .HasColumnName("tenant_id")
+            .IsRequired();
+
         builder.Property(plannedEvent => plannedEvent.Name)
             .HasColumnName("name")
             .HasMaxLength(200)
@@ -58,5 +62,8 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
 
         builder.HasIndex(plannedEvent => new { plannedEvent.IsDeleted, plannedEvent.EventTime })
             .HasDatabaseName("ix_events_is_deleted_event_time");
+
+        builder.HasIndex(plannedEvent => new { plannedEvent.TenantId, plannedEvent.IsDeleted, plannedEvent.EventTime })
+            .HasDatabaseName("ix_events_tenant_id_is_deleted_event_time");
     }
 }

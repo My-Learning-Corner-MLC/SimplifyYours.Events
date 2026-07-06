@@ -41,11 +41,13 @@ internal sealed class EfCoreEventRepository(
 
     public async Task<PlannedEvent?> GetByIdAsync(
         Guid eventId,
+        Guid tenantId,
         CancellationToken cancellationToken,
         bool asNoTracking = true)
     {
         var query = dbContext.Events
-            .Where(plannedEvent => !plannedEvent.IsDeleted);
+            .Where(plannedEvent => !plannedEvent.IsDeleted)
+            .Where(plannedEvent => plannedEvent.TenantId == tenantId);
 
         if (asNoTracking)
         {

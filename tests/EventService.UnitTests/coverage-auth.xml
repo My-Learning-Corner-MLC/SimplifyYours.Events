@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<coverage line-rate="0.9068999999999999" branch-rate="0.875" version="1.9" timestamp="1782628293" lines-covered="39" lines-valid="43" branches-covered="14" branches-valid="16">
+  <sources>
+    <source>/Users/mb/Desktop/SIDE-PROJECTS/SimplifyYours/code/backend/event-service/src/</source>
+  </sources>
+  <packages>
+    <package name="EventService.Api" line-rate="0.8965000000000001" branch-rate="0.8332999999999999" complexity="15">
+      <classes>
+        <class name="EventService.Api.Security.CurrentUserAccessor" filename="EventService.Api/Security/CurrentUserAccessor.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name="get_User" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="7" hits="9" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="7" hits="9" branch="False" />
+          </lines>
+        </class>
+        <class name="EventService.Api.Middleware.CurrentUserMiddleware" filename="EventService.Api/Middleware/CurrentUserMiddleware.cs" line-rate="1" branch-rate="0.8332999999999999" complexity="13">
+          <methods>
+            <method name="InvokeAsync" signature="(Microsoft.AspNetCore.Http.HttpContext,EventService.Application.Authorization.ICurrentUserAccessor)" line-rate="1" branch-rate="0.75" complexity="8">
+              <lines>
+                <line number="13" hits="6" branch="False" />
+                <line number="14" hits="6" branch="True" condition-coverage="66.66% (4/6)">
+                  <conditions>
+                    <condition number="8" type="jump" coverage="50%" />
+                    <condition number="20" type="jump" coverage="50%" />
+                    <condition number="57" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="15" hits="1" branch="False" />
+                <line number="16" hits="1" branch="False" />
+                <line number="19" hits="5" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="95" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="20" hits="4" branch="False" />
+                <line number="21" hits="4" branch="False" />
+                <line number="22" hits="4" branch="False" />
+                <line number="25" hits="1" branch="False" />
+                <line number="26" hits="1" branch="False" />
+                <line number="27" hits="6" branch="False" />
+              </lines>
+            </method>
+            <method name="TryResolve" signature="(System.Security.Claims.ClaimsPrincipal,EventService.Application.Authorization.CurrentUser&amp;)" line-rate="1" branch-rate="1" complexity="4">
+              <lines>
+                <line number="30" hits="5" branch="False" />
+                <line number="31" hits="5" branch="False" />
+                <line number="33" hits="5" branch="False" />
+                <line number="34" hits="5" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="31" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="35" hits="2" branch="False" />
+                <line number="36" hits="2" branch="False" />
+                <line number="39" hits="3" branch="False" />
+                <line number="40" hits="3" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="66" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="41" hits="2" branch="False" />
+                <line number="42" hits="2" branch="False" />
+                <line number="45" hits="1" branch="False" />
+                <line number="46" hits="1" branch="False" />
+                <line number="47" hits="5" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(Microsoft.AspNetCore.Http.RequestDelegate)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="7" hits="6" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="13" hits="6" branch="False" />
+            <line number="14" hits="6" branch="True" condition-coverage="66.66% (4/6)">
+              <conditions>
+                <condition number="8" type="jump" coverage="50%" />
+                <condition number="20" type="jump" coverage="50%" />
+                <condition number="57" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="15" hits="1" branch="False" />
+            <line number="16" hits="1" branch="False" />
+            <line number="19" hits="5" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="95" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="20" hits="4" branch="False" />
+            <line number="21" hits="4" branch="False" />
+            <line number="22" hits="4" branch="False" />
+            <line number="25" hits="1" branch="False" />
+            <line number="26" hits="1" branch="False" />
+            <line number="27" hits="6" branch="False" />
+            <line number="30" hits="5" branch="False" />
+            <line number="31" hits="5" branch="False" />
+            <line number="33" hits="5" branch="False" />
+            <line number="34" hits="5" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="31" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="35" hits="2" branch="False" />
+            <line number="36" hits="2" branch="False" />
+            <line number="39" hits="3" branch="False" />
+            <line number="40" hits="3" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="66" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="41" hits="2" branch="False" />
+            <line number="42" hits="2" branch="False" />
+            <line number="45" hits="1" branch="False" />
+            <line number="46" hits="1" branch="False" />
+            <line number="47" hits="5" branch="False" />
+            <line number="7" hits="6" branch="False" />
+          </lines>
+        </class>
+        <class name="EventService.Api.Middleware.CurrentUserMiddlewareExtensions" filename="EventService.Api/Middleware/CurrentUserMiddleware.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name="UseCurrentUser" signature="(Microsoft.AspNetCore.Builder.IApplicationBuilder)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="53" hits="0" branch="False" />
+                <line number="54" hits="0" branch="False" />
+                <line number="55" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="53" hits="0" branch="False" />
+            <line number="54" hits="0" branch="False" />
+            <line number="55" hits="0" branch="False" />
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="EventService.Application" line-rate="0.9285" branch-rate="1" complexity="8">
+      <classes>
+        <class name="EventService.Application.Authorization.BaseCommand" filename="EventService.Application/Authorization/BaseCommand.cs" line-rate="0.5" branch-rate="1" complexity="2">
+          <methods>
+            <method name="get_CurrentUser" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="5" hits="69" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(EventService.Application.Authorization.BaseCommand)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="3" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="5" hits="69" branch="False" />
+            <line number="3" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="EventService.Application.Authorization.CurrentUser" filename="EventService.Application/Authorization/CurrentUser.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name="get_UserId" signature="()" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="3" hits="43" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="3" hits="43" branch="False" />
+          </lines>
+        </class>
+        <class name="EventService.Application.Authorization.CurrentUserPipelineBehavior`2" filename="EventService.Application/Authorization/CurrentUserPipelineBehavior.cs" line-rate="1" branch-rate="1" complexity="5">
+          <methods>
+            <method name="Handle" signature="(TRequest,MediatR.RequestHandlerDelegate`1&lt;TResponse&gt;,System.Threading.CancellationToken)" line-rate="1" branch-rate="1" complexity="4">
+              <lines>
+                <line number="14" hits="3" branch="False" />
+                <line number="15" hits="3" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="19" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="16" hits="2" branch="False" />
+                <line number="17" hits="2" branch="True" condition-coverage="100% (2/2)">
+                  <conditions>
+                    <condition number="35" type="jump" coverage="100%" />
+                  </conditions>
+                </line>
+                <line number="18" hits="2" branch="False" />
+                <line number="19" hits="2" branch="False" />
+                <line number="20" hits="1" branch="False" />
+                <line number="22" hits="2" branch="False" />
+                <line number="23" hits="2" branch="False" />
+              </lines>
+            </method>
+            <method name=".ctor" signature="(EventService.Application.Authorization.ICurrentUserAccessor)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="5" hits="3" branch="False" />
+                <line number="6" hits="3" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="14" hits="3" branch="False" />
+            <line number="15" hits="3" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="19" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="16" hits="2" branch="False" />
+            <line number="17" hits="2" branch="True" condition-coverage="100% (2/2)">
+              <conditions>
+                <condition number="35" type="jump" coverage="100%" />
+              </conditions>
+            </line>
+            <line number="18" hits="2" branch="False" />
+            <line number="19" hits="2" branch="False" />
+            <line number="20" hits="1" branch="False" />
+            <line number="22" hits="2" branch="False" />
+            <line number="23" hits="2" branch="False" />
+            <line number="5" hits="3" branch="False" />
+            <line number="6" hits="3" branch="False" />
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

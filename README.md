@@ -4,6 +4,11 @@ Backend service for Simplify Yours event capabilities.
 
 ## Current API
 
+Protected event resource endpoints require `Authorization: Bearer <access_token>`.
+Access tokens must be issued by Identity Service for audience
+`simplify-yours-api`. Normal users can access only their own events.
+`SuperAdmin` can access and mutate events across owners.
+
 ### `GET /ping`
 
 Returns a service-up message and the current GMT/UTC date-time.
@@ -26,6 +31,7 @@ Request body:
 Responses:
 
 - `201 Created` with the created event details and `Location` value `/events/{id}`.
+- `401 Unauthorized` when the bearer token is missing or invalid.
 - `400 Bad Request` with validation details when the request is invalid.
 
 Supported event types:
@@ -41,7 +47,9 @@ Returns details for an active event by id.
 Responses:
 
 - `200 OK` with event details.
+- `401 Unauthorized` when the bearer token is missing or invalid.
 - `404 Not Found` when the event does not exist or is soft deleted.
+- `404 Not Found` when a normal user requests another user's event.
 
 Response body:
 
@@ -89,6 +97,7 @@ Request options:
 Responses:
 
 - `200 OK` with matching events and pagination metadata.
+- `401 Unauthorized` when the bearer token is missing or invalid.
 - `400 Bad Request` with validation details when the request is invalid.
 
 Response body:
@@ -135,8 +144,10 @@ Request body:
 Responses:
 
 - `200 OK` with updated event details and a new `concurrencyToken`.
+- `401 Unauthorized` when the bearer token is missing or invalid.
 - `400 Bad Request` with validation details when the request is invalid.
 - `404 Not Found` when the event does not exist or is soft deleted.
+- `404 Not Found` when a normal user updates another user's event.
 - `409 Conflict` when the supplied `concurrencyToken` is stale.
 
 Response body:
@@ -230,11 +241,25 @@ Payload shape:
 ```json
 {
   "eventId": "00000000-0000-0000-0000-000000000000",
-  "eventName": "Product launch"
+  "eventName": "Product launch",
+  "ownerUserId": "00000000-0000-0000-0000-000000000000"
 }
 ```
 
 Outbox rows are stored in `outbox_messages`. A Kafka outbox publisher background service publishes unprocessed rows to `Kafka:EventReferenceTopic` when `Kafka:BootstrapServers` is configured. The publisher is disabled when Kafka configuration is incomplete.
+
+## Configuration
+
+The service requires `ConnectionStrings:EventServiceDb` at runtime. Protected
+endpoints also require:
+
+- `Auth:Issuer`: Identity Service issuer URL, for example `https://localhost:15200/`.
+- `Auth:Audience`: expected access-token audience, currently `simplify-yours-api`.
+- `Auth:AccessTokenEncryptionKeyBase64`: base64-encoded shared access-token encryption key.
+
+Keep real connection strings, token encryption keys, and tokens out of source
+control. Supply secrets through environment variables, user secrets, or
+local-only configuration.
 
 ## Developer Commands
 
