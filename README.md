@@ -15,22 +15,36 @@ Returns a service-up message and the current GMT/UTC date-time.
 
 ### `POST /events`
 
-Creates an event with name, time, type, optional description, audit timestamps, and soft-delete fields.
+Creates an event with name, time, type, optional description, optional time zone, optional structured location, audit timestamps, and soft-delete fields.
 
 Request body:
 
 ```json
 {
-  "eventName": "Product launch",
-  "eventTime": "2026-06-01T10:00:00Z",
-  "eventType": "event",
-  "eventDescription": "Launch plan"
+  "eventName": "Mateo turns five",
+  "eventTime": "2026-08-17T14:00:00Z",
+  "eventType": "birthday",
+  "eventDescription": "Backyard birthday party",
+  "timeZoneId": "America/Los_Angeles",
+  "location": {
+    "venueName": "The Backyard",
+    "address": "414 Maple Street, Brooklyn, NY 11215",
+    "onlineUrl": null,
+    "notes": "Park on Maple; side gate unlocked from 1:30."
+  }
 }
 ```
 
+`timeZoneId` and `location` (and every field inside `location`) are optional; a
+minimal body with only `eventName` and `eventType` still returns `201`, which
+supports the "create now, finish later" flow. A `location` whose fields are all
+blank is normalized to no location. `onlineUrl`, when present, must be an
+absolute `http`/`https` URL. Field caps: `venueName` ≤ 200, `address` ≤ 500,
+`onlineUrl` ≤ 2048, `notes` ≤ 2000, `timeZoneId` a valid IANA id (≤ 64).
+
 Responses:
 
-- `201 Created` with the created event details and `Location` value `/events/{id}`.
+- `201 Created` with the created event details (including the echoed, normalized `location` and `timeZoneId`) and `Location` value `/events/{id}`.
 - `401 Unauthorized` when the bearer token is missing or invalid.
 - `400 Bad Request` with validation details when the request is invalid.
 
@@ -39,6 +53,12 @@ Supported event types:
 - `birthday`
 - `wedding`
 - `event`
+- `anniversary`
+- `launch`
+- `dinner`
+- `other`
+
+The `EventCreated` Kafka payload is unchanged (`eventId`, `eventName`, `tenantId`); location and type are not propagated.
 
 ### `GET /events/{eventId}`
 
