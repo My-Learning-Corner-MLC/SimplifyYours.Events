@@ -31,7 +31,9 @@ public sealed class CreateEventCommandHandler(
             eventTime,
             eventType,
             request.EventDescription,
-            now);
+            now,
+            ResolveLocation(request.Location),
+            request.TimeZoneId);
 
         await eventRepository.AddAsync(plannedEvent, cancellationToken);
         await integrationEventOutbox.AddAsync(
@@ -70,6 +72,19 @@ public sealed class CreateEventCommandHandler(
             return eventType;
         }
 
-        throw new ArgumentException("Event type must be one of: birthday, wedding, event.", nameof(value));
+        throw new ArgumentException(
+            "Event type must be one of: birthday, wedding, event, anniversary, launch, dinner, other.",
+            nameof(value));
+    }
+
+    private static EventLocation? ResolveLocation(CreateEventLocation? location)
+    {
+        return location is null
+            ? null
+            : EventLocation.Create(
+                location.VenueName,
+                location.Address,
+                location.OnlineUrl,
+                location.Notes);
     }
 }

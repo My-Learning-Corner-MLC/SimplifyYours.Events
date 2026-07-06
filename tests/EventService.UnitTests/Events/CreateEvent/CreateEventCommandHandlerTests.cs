@@ -70,6 +70,133 @@ public sealed class CreateEventCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WithLocationAndTimeZone_CreatesEventWithBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        PlannedEvent? savedEvent = null;
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<PlannedEvent, CancellationToken>((plannedEvent, _) => savedEvent = plannedEvent)
+            .Returns(Task.CompletedTask);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new CreateEventCommand(
+                "Mateo turns five",
+                null,
+                "birthday",
+                null,
+                new CreateEventLocation(
+                    " The Backyard ",
+                    "414 Maple Street, Brooklyn, NY 11215",
+                    "https://meet.example.com/party",
+                    "Side gate unlocked from 1:30."),
+                "America/Los_Angeles")
+            {
+                CurrentUser = TestUser
+            },
+            CancellationToken.None);
+
+        Assert.NotNull(result.Event.Location);
+        Assert.Equal("The Backyard", result.Event.Location.VenueName);
+        Assert.Equal("414 Maple Street, Brooklyn, NY 11215", result.Event.Location.Address);
+        Assert.Equal("https://meet.example.com/party", result.Event.Location.OnlineUrl);
+        Assert.Equal("Side gate unlocked from 1:30.", result.Event.Location.Notes);
+        Assert.Equal("America/Los_Angeles", result.Event.TimeZoneId);
+        Assert.NotNull(savedEvent);
+        Assert.NotNull(savedEvent.Location);
+        Assert.Equal("The Backyard", savedEvent.Location.VenueName);
+        Assert.Equal("America/Los_Angeles", savedEvent.TimeZoneId);
+        repository.Verify(
+            repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        outbox.Verify(
+            publisher => publisher.AddAsync(
+                It.Is<IntegrationEventEnvelope>(message => message.EventType == "EventCreated"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithoutLocationAndTimeZone_CreatesEventWithoutThem()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        PlannedEvent? savedEvent = null;
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<PlannedEvent, CancellationToken>((plannedEvent, _) => savedEvent = plannedEvent)
+            .Returns(Task.CompletedTask);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new CreateEventCommand("Anniversary dinner", null, "anniversary", null)
+            {
+                CurrentUser = TestUser
+            },
+            CancellationToken.None);
+
+        Assert.Null(result.Event.Location);
+        Assert.Null(result.Event.TimeZoneId);
+        Assert.Equal("anniversary", result.Event.EventType);
+        Assert.Null(savedEvent?.Location);
+        Assert.Null(savedEvent?.TimeZoneId);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenLocationIsAllBlank_CreatesEventWithNullLocation()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var repository = new Mock<IEventRepository>();
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new CreateEventCommand(
+                "Dinner party",
+                null,
+                "dinner",
+                null,
+                new CreateEventLocation("  ", null, string.Empty, "   "),
+                null)
+            {
+                CurrentUser = TestUser
+            },
+            CancellationToken.None);
+
+        Assert.Null(result.Event.Location);
+    }
+
+    [Fact]
     public async Task Handle_WhenEventTimeIsOmitted_DefaultsToNow()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
