@@ -218,6 +218,66 @@ public sealed class PlannedEventTests
     }
 
     [Fact]
+    public void Create_WithEndTime_StoresEndTimeInUtc()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var start = now.AddDays(1);
+        var end = start.AddHours(4);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            start,
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventEndTime: end);
+
+        Assert.Equal(end, plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void Create_WithoutEndTime_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            now.AddDays(1),
+            EventType.Dinner,
+            null,
+            now);
+
+        Assert.Null(plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void Create_WhenEndTimeBeforeStart_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var start = now.AddDays(1);
+
+        var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            start,
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventEndTime: start.AddHours(-1)));
+
+        Assert.Equal("eventEndTime", exception.ParamName);
+    }
+
+    [Fact]
     public void Create_WhenTimeZoneIdIsBlank_StoresNull()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);

@@ -41,6 +41,33 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
             })
             .WithMessage("Event time must be now or in the future.");
 
+        RuleFor(command => command.EventEndTime)
+            .Cascade(CascadeMode.Stop)
+            .Must((command, eventEndTime) => string.IsNullOrWhiteSpace(eventEndTime)
+                || EventParsing.TryParseEventTime(eventEndTime, out _))
+            .WithMessage("Event end time must be a valid date-time string.")
+            .Must((command, eventEndTime) =>
+            {
+                if (string.IsNullOrWhiteSpace(eventEndTime))
+                {
+                    return true;
+                }
+
+                if (!EventParsing.TryParseEventTime(eventEndTime, out var parsedEndTime))
+                {
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(command.EventTime)
+                    || !EventParsing.TryParseEventTime(command.EventTime, out var parsedStartTime))
+                {
+                    return true;
+                }
+
+                return parsedEndTime >= parsedStartTime;
+            })
+            .WithMessage("Event end time must be at or after the start time.");
+
         RuleFor(command => command.TimeZoneId)
             .Must(timeZoneId => string.IsNullOrWhiteSpace(timeZoneId)
                 || TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId.Trim(), out _))

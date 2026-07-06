@@ -47,6 +47,10 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("text")
                 .HasColumnName("description");
 
+            b.Property<DateTimeOffset?>("EventEndTime")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("event_end_time");
+
             b.Property<DateTimeOffset>("EventTime")
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("event_time");

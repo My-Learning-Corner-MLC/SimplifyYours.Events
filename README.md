@@ -23,6 +23,7 @@ Request body:
 {
   "eventName": "Mateo turns five",
   "eventTime": "2026-08-17T14:00:00Z",
+  "eventEndTime": "2026-08-17T18:00:00Z",
   "eventType": "birthday",
   "eventDescription": "Backyard birthday party",
   "timeZoneId": "America/Los_Angeles",
@@ -35,12 +36,14 @@ Request body:
 }
 ```
 
-`timeZoneId` and `location` (and every field inside `location`) are optional; a
-minimal body with only `eventName` and `eventType` still returns `201`, which
-supports the "create now, finish later" flow. A `location` whose fields are all
-blank is normalized to no location. `onlineUrl`, when present, must be an
-absolute `http`/`https` URL. Field caps: `venueName` ≤ 200, `address` ≤ 500,
-`onlineUrl` ≤ 2048, `notes` ≤ 2000, `timeZoneId` a valid IANA id (≤ 64).
+`eventEndTime`, `timeZoneId`, and `location` (and every field inside `location`)
+are optional; a minimal body with only `eventName` and `eventType` still returns
+`201`, which supports the "create now, finish later" flow. When present,
+`eventEndTime` must be a valid date-time at or after `eventTime`. A `location`
+whose fields are all blank is normalized to no location. `onlineUrl`, when
+present, must be an absolute `http`/`https` URL. Field caps: `venueName` ≤ 200,
+`address` ≤ 500, `onlineUrl` ≤ 2048, `notes` ≤ 2000, `timeZoneId` a valid IANA
+id (≤ 64).
 
 Responses:
 

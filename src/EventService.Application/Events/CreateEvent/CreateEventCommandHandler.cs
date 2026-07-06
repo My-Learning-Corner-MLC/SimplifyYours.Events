@@ -22,6 +22,7 @@ public sealed class CreateEventCommandHandler(
         var currentUser = request.CurrentUser;
         var now = timeProvider.GetUtcNow();
         var eventTime = ResolveEventTime(request.EventTime, now);
+        var eventEndTime = ResolveEventEndTime(request.EventEndTime);
         var eventType = ResolveEventType(request.EventType);
 
         var plannedEvent = PlannedEvent.Create(
@@ -33,7 +34,8 @@ public sealed class CreateEventCommandHandler(
             request.EventDescription,
             now,
             ResolveLocation(request.Location),
-            request.TimeZoneId);
+            request.TimeZoneId,
+            eventEndTime);
 
         await eventRepository.AddAsync(plannedEvent, cancellationToken);
         await integrationEventOutbox.AddAsync(
@@ -63,6 +65,21 @@ public sealed class CreateEventCommandHandler(
         }
 
         throw new ArgumentException("Event time must be a valid date-time string.", nameof(value));
+    }
+
+    private static DateTimeOffset? ResolveEventEndTime(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (EventParsing.TryParseEventTime(value, out var eventEndTime))
+        {
+            return eventEndTime;
+        }
+
+        throw new ArgumentException("Event end time must be a valid date-time string.", nameof(value));
     }
 
     private static EventType ResolveEventType(string value)

@@ -197,6 +197,48 @@ public sealed class CreateEventCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WithEndTime_StoresEndTime()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var start = now.AddDays(1);
+        var end = start.AddHours(4);
+        PlannedEvent? savedEvent = null;
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<PlannedEvent, CancellationToken>((plannedEvent, _) => savedEvent = plannedEvent)
+            .Returns(Task.CompletedTask);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now);
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var handler = new CreateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            unitOfWork.Object,
+            timeProvider.Object,
+            NullLogger<CreateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new CreateEventCommand(
+                "Dinner party",
+                start.ToString("O"),
+                "dinner",
+                null,
+                null,
+                null,
+                end.ToString("O"))
+            {
+                CurrentUser = TestUser
+            },
+            CancellationToken.None);
+
+        Assert.Equal(end, result.Event.EventEndTime);
+        Assert.Equal(end, savedEvent?.EventEndTime);
+        unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_WhenEventTimeIsOmitted_DefaultsToNow()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);

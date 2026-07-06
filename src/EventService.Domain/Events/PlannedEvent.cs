@@ -15,12 +15,14 @@ public sealed class PlannedEvent
         string? description,
         DateTimeOffset createdAt,
         EventLocation? location,
-        string? timeZoneId)
+        string? timeZoneId,
+        DateTimeOffset? eventEndTime)
     {
         Id = id;
         TenantId = tenantId;
         Name = name;
         EventTime = eventTime;
+        EventEndTime = eventEndTime;
         Type = type;
         Description = NormalizeOptionalText(description);
         Location = location;
@@ -39,6 +41,8 @@ public sealed class PlannedEvent
     public string Name { get; private set; } = string.Empty;
 
     public DateTimeOffset EventTime { get; private set; }
+
+    public DateTimeOffset? EventEndTime { get; private set; }
 
     public EventType Type { get; private set; }
 
@@ -67,7 +71,8 @@ public sealed class PlannedEvent
         string? description,
         DateTimeOffset createdAt,
         EventLocation? location = null,
-        string? timeZoneId = null)
+        string? timeZoneId = null,
+        DateTimeOffset? eventEndTime = null)
     {
         if (id == Guid.Empty)
         {
@@ -91,16 +96,27 @@ public sealed class PlannedEvent
             throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
         }
 
+        var utcEventTime = eventTime.ToUniversalTime();
+        DateTimeOffset? utcEventEndTime = eventEndTime?.ToUniversalTime();
+
+        if (utcEventEndTime is not null && utcEventEndTime < utcEventTime)
+        {
+            throw new ArgumentException(
+                "Event end time must be at or after the start time.",
+                nameof(eventEndTime));
+        }
+
         return new PlannedEvent(
             id,
             tenantId,
             normalizedName,
-            eventTime.ToUniversalTime(),
+            utcEventTime,
             type,
             description,
             createdAt.ToUniversalTime(),
             location,
-            timeZoneId);
+            timeZoneId,
+            utcEventEndTime);
     }
 
     public void UpdateDetails(

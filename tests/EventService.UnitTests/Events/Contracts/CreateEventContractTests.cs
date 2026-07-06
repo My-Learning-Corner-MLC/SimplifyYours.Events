@@ -47,6 +47,21 @@ public sealed class CreateEventContractTests
     }
 
     [Fact]
+    public void CreateEventRequest_ExposesEndTime()
+    {
+        var request = new CreateEventRequest(
+            "Dinner party",
+            "2026-05-17T14:00:00Z",
+            "dinner",
+            null,
+            null,
+            null,
+            "2026-05-17T18:00:00Z");
+
+        Assert.Equal("2026-05-17T18:00:00Z", request.EventEndTime);
+    }
+
+    [Fact]
     public void CreateEventResponse_ExposesResponseValues()
     {
         var id = Guid.NewGuid();

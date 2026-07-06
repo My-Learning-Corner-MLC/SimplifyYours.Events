@@ -12,7 +12,8 @@ public sealed record EventDetails(
     DateTimeOffset UpdatedAt,
     string ConcurrencyToken,
     EventLocationDetails? Location = null,
-    string? TimeZoneId = null)
+    string? TimeZoneId = null,
+    DateTimeOffset? EventEndTime = null)
 {
     internal static EventDetails From(PlannedEvent plannedEvent)
     {
@@ -26,7 +27,8 @@ public sealed record EventDetails(
             plannedEvent.UpdatedAt,
             Convert.ToBase64String(plannedEvent.ConcurrencyToken),
             EventLocationDetails.From(plannedEvent.Location),
-            plannedEvent.TimeZoneId);
+            plannedEvent.TimeZoneId,
+            plannedEvent.EventEndTime);
     }
 }
 

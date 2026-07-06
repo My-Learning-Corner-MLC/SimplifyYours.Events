@@ -251,6 +251,73 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
+    public async Task Validate_WithValidEndTimeAfterStart_Passes()
+    {
+        var validator = CreateValidator();
+        var command = new CreateEventCommand(
+            "Dinner party",
+            _now.AddHours(1).ToString("O"),
+            "dinner",
+            null,
+            null,
+            null,
+            _now.AddHours(4).ToString("O"));
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public async Task Validate_WhenEndTimeIsInvalid_FailsOnEventEndTime()
+    {
+        var validator = CreateValidator();
+        var command = new CreateEventCommand(
+            "Dinner party",
+            _now.AddHours(1).ToString("O"),
+            "dinner",
+            null,
+            null,
+            null,
+            "not-a-date");
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventEndTime));
+    }
+
+    [Fact]
+    public async Task Validate_WhenEndTimeBeforeStart_FailsOnEventEndTime()
+    {
+        var validator = CreateValidator();
+        var command = new CreateEventCommand(
+            "Dinner party",
+            _now.AddHours(4).ToString("O"),
+            "dinner",
+            null,
+            null,
+            null,
+            _now.AddHours(1).ToString("O"));
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventEndTime));
+    }
+
+    [Fact]
+    public async Task Validate_WhenEndTimeOmitted_Passes()
+    {
+        var validator = CreateValidator();
+        var command = new CreateEventCommand("Dinner party", _now.AddHours(1).ToString("O"), "dinner", null);
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
     public async Task Validate_WhenTimeZoneIdIsOmitted_Passes()
     {
         var validator = CreateValidator();

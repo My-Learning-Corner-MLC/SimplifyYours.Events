@@ -133,7 +133,8 @@ internal static class EventEndpoints
                             request.Location.Address,
                             request.Location.OnlineUrl,
                             request.Location.Notes),
-                    request.TimeZoneId),
+                    request.TimeZoneId,
+                    request.EventEndTime),
                 cancellationToken);
 
             var response = new CreateEventResponse(
@@ -152,7 +153,8 @@ internal static class EventEndpoints
                         result.Event.Location.Address,
                         result.Event.Location.OnlineUrl,
                         result.Event.Location.Notes),
-                result.Event.TimeZoneId);
+                result.Event.TimeZoneId,
+                result.Event.EventEndTime);
 
             return Results.Created($"/events/{response.Id}", response);
         }

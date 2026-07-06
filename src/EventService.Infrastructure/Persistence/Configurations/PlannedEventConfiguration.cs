@@ -29,6 +29,9 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .HasColumnName("event_time")
             .IsRequired();
 
+        builder.Property(plannedEvent => plannedEvent.EventEndTime)
+            .HasColumnName("event_end_time");
+
         builder.Property(plannedEvent => plannedEvent.Type)
             .HasColumnName("type")
             .HasConversion<string>()

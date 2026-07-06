@@ -9,7 +9,8 @@ public sealed record CreateEventCommand(
     string EventType,
     string? EventDescription,
     CreateEventLocation? Location = null,
-    string? TimeZoneId = null) : BaseCommand, IRequest<CreateEventResult>;
+    string? TimeZoneId = null,
+    string? EventEndTime = null) : BaseCommand, IRequest<CreateEventResult>;
 
 public sealed record CreateEventLocation(
     string? VenueName,
