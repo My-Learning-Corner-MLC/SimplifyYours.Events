@@ -4,4 +4,6 @@ public sealed record CreateEventRequest(
     string EventName,
     string? EventTime,
     string EventType,
-    string? EventDescription);
+    string? EventDescription,
+    EventLocationDto? Location = null,
+    string? TimeZoneId = null);

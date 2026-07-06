@@ -125,7 +125,15 @@ internal static class EventEndpoints
                     request.EventName,
                     request.EventTime,
                     request.EventType,
-                    request.EventDescription),
+                    request.EventDescription,
+                    request.Location is null
+                        ? null
+                        : new CreateEventLocation(
+                            request.Location.VenueName,
+                            request.Location.Address,
+                            request.Location.OnlineUrl,
+                            request.Location.Notes),
+                    request.TimeZoneId),
                 cancellationToken);
 
             var response = new CreateEventResponse(
@@ -136,7 +144,15 @@ internal static class EventEndpoints
                 result.Event.EventDescription,
                 result.Event.CreatedAt,
                 result.Event.UpdatedAt,
-                result.Event.ConcurrencyToken);
+                result.Event.ConcurrencyToken,
+                result.Event.Location is null
+                    ? null
+                    : new EventLocationDto(
+                        result.Event.Location.VenueName,
+                        result.Event.Location.Address,
+                        result.Event.Location.OnlineUrl,
+                        result.Event.Location.Notes),
+                result.Event.TimeZoneId);
 
             return Results.Created($"/events/{response.Id}", response);
         }
