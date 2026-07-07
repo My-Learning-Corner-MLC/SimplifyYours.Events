@@ -15,7 +15,9 @@ Returns a service-up message and the current GMT/UTC date-time.
 
 ### `POST /events`
 
-Creates an event with name, time, type, optional description, optional time zone, optional structured location, audit timestamps, and soft-delete fields.
+Creates an event with name, time, type, optional description, optional start/end
+times, optional time zone, optional structured location, audit timestamps, and
+soft-delete fields.
 
 Request body:
 
@@ -23,6 +25,7 @@ Request body:
 {
   "eventName": "Mateo turns five",
   "eventTime": "2026-08-17T14:00:00Z",
+  "eventStartTime": "2026-08-17T14:00:00Z",
   "eventEndTime": "2026-08-17T18:00:00Z",
   "eventType": "birthday",
   "eventDescription": "Backyard birthday party",
@@ -30,20 +33,21 @@ Request body:
   "location": {
     "venueName": "The Backyard",
     "address": "414 Maple Street, Brooklyn, NY 11215",
-    "onlineUrl": null,
     "notes": "Park on Maple; side gate unlocked from 1:30."
   }
 }
 ```
 
-`eventEndTime`, `timeZoneId`, and `location` (and every field inside `location`)
-are optional; a minimal body with only `eventName` and `eventType` still returns
-`201`, which supports the "create now, finish later" flow. When present,
-`eventEndTime` must be a valid date-time at or after `eventTime`. A `location`
-whose fields are all blank is normalized to no location. `onlineUrl`, when
-present, must be an absolute `http`/`https` URL. Field caps: `venueName` ≤ 200,
-`address` ≤ 500, `onlineUrl` ≤ 2048, `notes` ≤ 2000, `timeZoneId` a valid IANA
-id (≤ 64).
+`eventStartTime`, `eventEndTime`, `timeZoneId`, and `location` (and every field
+inside `location`) are optional; a minimal body with only `eventName` and
+`eventType` still returns `201`, which supports the "create now, finish later"
+flow. `eventTime` is the canonical schedule anchor (defaults to now when
+omitted); `eventStartTime` and `eventEndTime` capture an optional precise window.
+When present, `eventEndTime` must be a valid date-time at or after the start
+(`eventStartTime` if given, otherwise `eventTime`). A `location` whose fields are
+all blank is normalized to no location. Field caps: `venueName` ≤ 200,
+`address` ≤ 500, `notes` ≤ 2000, `timeZoneId` a valid IANA id (≤ 64). There is no
+online-link field.
 
 Responses:
 

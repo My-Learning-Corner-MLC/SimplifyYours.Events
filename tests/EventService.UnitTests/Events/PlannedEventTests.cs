@@ -177,7 +177,6 @@ public sealed class PlannedEventTests
         var location = EventLocation.Create(
             "The Backyard",
             "414 Maple Street, Brooklyn, NY 11215",
-            "https://meet.example.com/party",
             "Side gate unlocked from 1:30.");
 
         var plannedEvent = PlannedEvent.Create(
@@ -194,7 +193,6 @@ public sealed class PlannedEventTests
         Assert.NotNull(plannedEvent.Location);
         Assert.Equal("The Backyard", plannedEvent.Location.VenueName);
         Assert.Equal("414 Maple Street, Brooklyn, NY 11215", plannedEvent.Location.Address);
-        Assert.Equal("https://meet.example.com/party", plannedEvent.Location.OnlineUrl);
         Assert.Equal("Side gate unlocked from 1:30.", plannedEvent.Location.Notes);
         Assert.Equal("America/Los_Angeles", plannedEvent.TimeZoneId);
     }
@@ -218,29 +216,32 @@ public sealed class PlannedEventTests
     }
 
     [Fact]
-    public void Create_WithEndTime_StoresEndTimeInUtc()
+    public void Create_WithStartAndEndTime_StoresBothInUtc()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var start = now.AddDays(1);
-        var end = start.AddHours(4);
+        var anchor = now.AddDays(1);
+        var start = anchor.AddHours(2);
+        var end = anchor.AddHours(6);
 
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Dinner party",
-            start,
+            anchor,
             EventType.Dinner,
             null,
             now,
             location: null,
             timeZoneId: null,
+            eventStartTime: start,
             eventEndTime: end);
 
+        Assert.Equal(start, plannedEvent.EventStartTime);
         Assert.Equal(end, plannedEvent.EventEndTime);
     }
 
     [Fact]
-    public void Create_WithoutEndTime_StoresNull()
+    public void Create_WithoutStartAndEndTime_StoresNull()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
 
@@ -253,25 +254,28 @@ public sealed class PlannedEventTests
             null,
             now);
 
+        Assert.Null(plannedEvent.EventStartTime);
         Assert.Null(plannedEvent.EventEndTime);
     }
 
     [Fact]
-    public void Create_WhenEndTimeBeforeStart_Throws()
+    public void Create_WhenEndTimeBeforeStartTime_Throws()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var start = now.AddDays(1);
+        var anchor = now.AddDays(1);
+        var start = anchor.AddHours(4);
 
         var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Dinner party",
-            start,
+            anchor,
             EventType.Dinner,
             null,
             now,
             location: null,
             timeZoneId: null,
+            eventStartTime: start,
             eventEndTime: start.AddHours(-1)));
 
         Assert.Equal("eventEndTime", exception.ParamName);

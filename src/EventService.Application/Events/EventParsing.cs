@@ -3,7 +3,7 @@ using EventService.Domain.Events;
 
 namespace EventService.Application.Events;
 
-internal static class EventParsing
+public static class EventParsing
 {
     public static bool TryParseEventTime(string? value, out DateTimeOffset eventTime)
     {

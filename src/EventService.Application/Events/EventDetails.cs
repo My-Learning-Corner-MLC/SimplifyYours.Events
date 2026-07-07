@@ -13,6 +13,7 @@ public sealed record EventDetails(
     string ConcurrencyToken,
     EventLocationDetails? Location = null,
     string? TimeZoneId = null,
+    DateTimeOffset? EventStartTime = null,
     DateTimeOffset? EventEndTime = null)
 {
     internal static EventDetails From(PlannedEvent plannedEvent)
@@ -28,6 +29,7 @@ public sealed record EventDetails(
             Convert.ToBase64String(plannedEvent.ConcurrencyToken),
             EventLocationDetails.From(plannedEvent.Location),
             plannedEvent.TimeZoneId,
+            plannedEvent.EventStartTime,
             plannedEvent.EventEndTime);
     }
 }
@@ -35,7 +37,6 @@ public sealed record EventDetails(
 public sealed record EventLocationDetails(
     string? VenueName,
     string? Address,
-    string? OnlineUrl,
     string? Notes)
 {
     internal static EventLocationDetails? From(EventLocation? location)
@@ -45,7 +46,6 @@ public sealed record EventLocationDetails(
             : new EventLocationDetails(
                 location.VenueName,
                 location.Address,
-                location.OnlineUrl,
                 location.Notes);
     }
 }

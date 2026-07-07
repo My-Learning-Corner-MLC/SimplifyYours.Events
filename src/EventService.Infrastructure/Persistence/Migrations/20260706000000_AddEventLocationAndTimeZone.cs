@@ -27,13 +27,6 @@ public partial class AddEventLocationAndTimeZone : Migration
             nullable: true);
 
         migrationBuilder.AddColumn<string>(
-            name: "location_online_url",
-            table: "events",
-            type: "character varying(2048)",
-            maxLength: 2048,
-            nullable: true);
-
-        migrationBuilder.AddColumn<string>(
             name: "location_notes",
             table: "events",
             type: "character varying(2000)",
@@ -56,10 +49,6 @@ public partial class AddEventLocationAndTimeZone : Migration
 
         migrationBuilder.DropColumn(
             name: "location_address",
-            table: "events");
-
-        migrationBuilder.DropColumn(
-            name: "location_online_url",
             table: "events");
 
         migrationBuilder.DropColumn(

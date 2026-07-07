@@ -41,6 +41,11 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
             })
             .WithMessage("Event time must be now or in the future.");
 
+        RuleFor(command => command.EventStartTime)
+            .Must(eventStartTime => string.IsNullOrWhiteSpace(eventStartTime)
+                || EventParsing.TryParseEventTime(eventStartTime, out _))
+            .WithMessage("Event start time must be a valid date-time string.");
+
         RuleFor(command => command.EventEndTime)
             .Cascade(CascadeMode.Stop)
             .Must((command, eventEndTime) => string.IsNullOrWhiteSpace(eventEndTime)
@@ -58,13 +63,8 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
                     return false;
                 }
 
-                if (string.IsNullOrWhiteSpace(command.EventTime)
-                    || !EventParsing.TryParseEventTime(command.EventTime, out var parsedStartTime))
-                {
-                    return true;
-                }
-
-                return parsedEndTime >= parsedStartTime;
+                var comparableStart = ResolveComparableStart(command);
+                return comparableStart is null || parsedEndTime >= comparableStart;
             })
             .WithMessage("Event end time must be at or after the start time.");
 
@@ -83,17 +83,26 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
                 .MaximumLength(EventLocation.AddressMaxLength)
                 .WithMessage($"Address must not exceed {EventLocation.AddressMaxLength} characters.");
 
-            RuleFor(command => command.Location!.OnlineUrl)
-                .Cascade(CascadeMode.Stop)
-                .MaximumLength(EventLocation.OnlineUrlMaxLength)
-                .WithMessage($"Online link must not exceed {EventLocation.OnlineUrlMaxLength} characters.")
-                .Must(onlineUrl => string.IsNullOrWhiteSpace(onlineUrl)
-                    || EventLocation.IsAbsoluteHttpUri(onlineUrl.Trim()))
-                .WithMessage("Online link must be an absolute http or https URL.");
-
             RuleFor(command => command.Location!.Notes)
                 .MaximumLength(EventLocation.NotesMaxLength)
                 .WithMessage($"Location notes must not exceed {EventLocation.NotesMaxLength} characters.");
         });
+    }
+
+    private static DateTimeOffset? ResolveComparableStart(CreateEventCommand command)
+    {
+        if (!string.IsNullOrWhiteSpace(command.EventStartTime)
+            && EventParsing.TryParseEventTime(command.EventStartTime, out var parsedStartTime))
+        {
+            return parsedStartTime;
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.EventTime)
+            && EventParsing.TryParseEventTime(command.EventTime, out var parsedEventTime))
+        {
+            return parsedEventTime;
+        }
+
+        return null;
     }
 }

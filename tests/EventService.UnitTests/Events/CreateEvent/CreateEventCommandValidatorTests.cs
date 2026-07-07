@@ -120,7 +120,6 @@ public sealed class CreateEventCommandValidatorTests
             new CreateEventLocation(
                 "The Backyard",
                 "414 Maple Street, Brooklyn, NY 11215",
-                "https://meet.example.com/party",
                 "Side gate unlocked from 1:30."),
             "America/Los_Angeles");
 
@@ -153,7 +152,7 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "launch",
             null,
-            new CreateEventLocation(new string('v', 201), null, null, null));
+            new CreateEventLocation(new string('v', 201), null, null));
 
         var result = await validator.ValidateAsync(command);
 
@@ -170,49 +169,12 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "launch",
             null,
-            new CreateEventLocation(null, new string('a', 501), null, null));
+            new CreateEventLocation(null, new string('a', 501), null));
 
         var result = await validator.ValidateAsync(command);
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, error => error.PropertyName == "Location.Address");
-    }
-
-    [Fact]
-    public async Task Validate_WhenOnlineUrlIsTooLong_FailsOnLocationOnlineUrl()
-    {
-        var validator = CreateValidator();
-        var command = new CreateEventCommand(
-            "Launch plan",
-            null,
-            "launch",
-            null,
-            new CreateEventLocation(null, null, "https://example.com/" + new string('u', 2048), null));
-
-        var result = await validator.ValidateAsync(command);
-
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "Location.OnlineUrl");
-    }
-
-    [Theory]
-    [InlineData("not-a-url")]
-    [InlineData("ftp://example.com/file")]
-    [InlineData("/relative/path")]
-    public async Task Validate_WhenOnlineUrlIsMalformed_FailsOnLocationOnlineUrl(string onlineUrl)
-    {
-        var validator = CreateValidator();
-        var command = new CreateEventCommand(
-            "Launch plan",
-            null,
-            "launch",
-            null,
-            new CreateEventLocation(null, null, onlineUrl, null));
-
-        var result = await validator.ValidateAsync(command);
-
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "Location.OnlineUrl");
     }
 
     [Fact]
@@ -224,7 +186,7 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "launch",
             null,
-            new CreateEventLocation(null, null, null, new string('n', 2001)));
+            new CreateEventLocation(null, null, new string('n', 2001)));
 
         var result = await validator.ValidateAsync(command);
 
@@ -251,7 +213,7 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WithValidEndTimeAfterStart_Passes()
+    public async Task Validate_WithValidStartAndEndTime_Passes()
     {
         var validator = CreateValidator();
         var command = new CreateEventCommand(
@@ -259,13 +221,29 @@ public sealed class CreateEventCommandValidatorTests
             _now.AddHours(1).ToString("O"),
             "dinner",
             null,
-            null,
-            null,
-            _now.AddHours(4).ToString("O"));
+            EventStartTime: _now.AddHours(1).ToString("O"),
+            EventEndTime: _now.AddHours(4).ToString("O"));
 
         var result = await validator.ValidateAsync(command);
 
         Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public async Task Validate_WhenStartTimeIsInvalid_FailsOnEventStartTime()
+    {
+        var validator = CreateValidator();
+        var command = new CreateEventCommand(
+            "Dinner party",
+            _now.AddHours(1).ToString("O"),
+            "dinner",
+            null,
+            EventStartTime: "not-a-date");
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventStartTime));
     }
 
     [Fact]
@@ -277,9 +255,7 @@ public sealed class CreateEventCommandValidatorTests
             _now.AddHours(1).ToString("O"),
             "dinner",
             null,
-            null,
-            null,
-            "not-a-date");
+            EventEndTime: "not-a-date");
 
         var result = await validator.ValidateAsync(command);
 
@@ -288,17 +264,16 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEndTimeBeforeStart_FailsOnEventEndTime()
+    public async Task Validate_WhenEndTimeBeforeStartTime_FailsOnEventEndTime()
     {
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Dinner party",
-            _now.AddHours(4).ToString("O"),
+            _now.AddHours(1).ToString("O"),
             "dinner",
             null,
-            null,
-            null,
-            _now.AddHours(1).ToString("O"));
+            EventStartTime: _now.AddHours(4).ToString("O"),
+            EventEndTime: _now.AddHours(2).ToString("O"));
 
         var result = await validator.ValidateAsync(command);
 
@@ -307,7 +282,7 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEndTimeOmitted_Passes()
+    public async Task Validate_WhenStartAndEndTimeOmitted_Passes()
     {
         var validator = CreateValidator();
         var command = new CreateEventCommand("Dinner party", _now.AddHours(1).ToString("O"), "dinner", null);

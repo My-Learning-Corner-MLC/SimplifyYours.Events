@@ -29,6 +29,9 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .HasColumnName("event_time")
             .IsRequired();
 
+        builder.Property(plannedEvent => plannedEvent.EventStartTime)
+            .HasColumnName("event_start_time");
+
         builder.Property(plannedEvent => plannedEvent.EventEndTime)
             .HasColumnName("event_end_time");
 
@@ -50,10 +53,6 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             location.Property(eventLocation => eventLocation.Address)
                 .HasColumnName("location_address")
                 .HasMaxLength(EventLocation.AddressMaxLength);
-
-            location.Property(eventLocation => eventLocation.OnlineUrl)
-                .HasColumnName("location_online_url")
-                .HasMaxLength(EventLocation.OnlineUrlMaxLength);
 
             location.Property(eventLocation => eventLocation.Notes)
                 .HasColumnName("location_notes")

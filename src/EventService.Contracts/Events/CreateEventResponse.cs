@@ -11,4 +11,5 @@ public sealed record CreateEventResponse(
     string ConcurrencyToken,
     EventLocationDto? Location = null,
     string? TimeZoneId = null,
+    DateTimeOffset? EventStartTime = null,
     DateTimeOffset? EventEndTime = null);

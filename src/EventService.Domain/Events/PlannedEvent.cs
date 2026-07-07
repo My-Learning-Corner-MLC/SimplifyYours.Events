@@ -16,12 +16,14 @@ public sealed class PlannedEvent
         DateTimeOffset createdAt,
         EventLocation? location,
         string? timeZoneId,
+        DateTimeOffset? eventStartTime,
         DateTimeOffset? eventEndTime)
     {
         Id = id;
         TenantId = tenantId;
         Name = name;
         EventTime = eventTime;
+        EventStartTime = eventStartTime;
         EventEndTime = eventEndTime;
         Type = type;
         Description = NormalizeOptionalText(description);
@@ -41,6 +43,8 @@ public sealed class PlannedEvent
     public string Name { get; private set; } = string.Empty;
 
     public DateTimeOffset EventTime { get; private set; }
+
+    public DateTimeOffset? EventStartTime { get; private set; }
 
     public DateTimeOffset? EventEndTime { get; private set; }
 
@@ -72,6 +76,7 @@ public sealed class PlannedEvent
         DateTimeOffset createdAt,
         EventLocation? location = null,
         string? timeZoneId = null,
+        DateTimeOffset? eventStartTime = null,
         DateTimeOffset? eventEndTime = null)
     {
         if (id == Guid.Empty)
@@ -97,13 +102,18 @@ public sealed class PlannedEvent
         }
 
         var utcEventTime = eventTime.ToUniversalTime();
+        DateTimeOffset? utcEventStartTime = eventStartTime?.ToUniversalTime();
         DateTimeOffset? utcEventEndTime = eventEndTime?.ToUniversalTime();
 
-        if (utcEventEndTime is not null && utcEventEndTime < utcEventTime)
+        if (utcEventEndTime is not null)
         {
-            throw new ArgumentException(
-                "Event end time must be at or after the start time.",
-                nameof(eventEndTime));
+            var effectiveStart = utcEventStartTime ?? utcEventTime;
+            if (utcEventEndTime < effectiveStart)
+            {
+                throw new ArgumentException(
+                    "Event end time must be at or after the start time.",
+                    nameof(eventEndTime));
+            }
         }
 
         return new PlannedEvent(
@@ -116,6 +126,7 @@ public sealed class PlannedEvent
             createdAt.ToUniversalTime(),
             location,
             timeZoneId,
+            utcEventStartTime,
             utcEventEndTime);
     }
 

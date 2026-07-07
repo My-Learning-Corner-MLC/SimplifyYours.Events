@@ -22,7 +22,8 @@ public sealed class CreateEventCommandHandler(
         var currentUser = request.CurrentUser;
         var now = timeProvider.GetUtcNow();
         var eventTime = ResolveEventTime(request.EventTime, now);
-        var eventEndTime = ResolveEventEndTime(request.EventEndTime);
+        var eventStartTime = ResolveOptionalTime(request.EventStartTime, "Event start time must be a valid date-time string.");
+        var eventEndTime = ResolveOptionalTime(request.EventEndTime, "Event end time must be a valid date-time string.");
         var eventType = ResolveEventType(request.EventType);
 
         var plannedEvent = PlannedEvent.Create(
@@ -35,6 +36,7 @@ public sealed class CreateEventCommandHandler(
             now,
             ResolveLocation(request.Location),
             request.TimeZoneId,
+            eventStartTime,
             eventEndTime);
 
         await eventRepository.AddAsync(plannedEvent, cancellationToken);
@@ -67,19 +69,19 @@ public sealed class CreateEventCommandHandler(
         throw new ArgumentException("Event time must be a valid date-time string.", nameof(value));
     }
 
-    private static DateTimeOffset? ResolveEventEndTime(string? value)
+    private static DateTimeOffset? ResolveOptionalTime(string? value, string invalidMessage)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             return null;
         }
 
-        if (EventParsing.TryParseEventTime(value, out var eventEndTime))
+        if (EventParsing.TryParseEventTime(value, out var parsed))
         {
-            return eventEndTime;
+            return parsed;
         }
 
-        throw new ArgumentException("Event end time must be a valid date-time string.", nameof(value));
+        throw new ArgumentException(invalidMessage, nameof(value));
     }
 
     private static EventType ResolveEventType(string value)
@@ -101,7 +103,6 @@ public sealed class CreateEventCommandHandler(
             : EventLocation.Create(
                 location.VenueName,
                 location.Address,
-                location.OnlineUrl,
                 location.Notes);
     }
 }

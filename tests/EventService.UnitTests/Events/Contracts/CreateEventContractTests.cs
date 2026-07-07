@@ -27,7 +27,6 @@ public sealed class CreateEventContractTests
         var location = new EventLocationDto(
             "The Backyard",
             "414 Maple Street, Brooklyn, NY 11215",
-            "https://meet.example.com/party",
             "Side gate unlocked from 1:30.");
 
         var request = new CreateEventRequest(
@@ -41,23 +40,22 @@ public sealed class CreateEventContractTests
         Assert.Same(location, request.Location);
         Assert.Equal("The Backyard", request.Location.VenueName);
         Assert.Equal("414 Maple Street, Brooklyn, NY 11215", request.Location.Address);
-        Assert.Equal("https://meet.example.com/party", request.Location.OnlineUrl);
         Assert.Equal("Side gate unlocked from 1:30.", request.Location.Notes);
         Assert.Equal("America/Los_Angeles", request.TimeZoneId);
     }
 
     [Fact]
-    public void CreateEventRequest_ExposesEndTime()
+    public void CreateEventRequest_ExposesStartAndEndTime()
     {
         var request = new CreateEventRequest(
             "Dinner party",
-            "2026-05-17T14:00:00Z",
+            "2026-05-17T00:00:00Z",
             "dinner",
             null,
-            null,
-            null,
-            "2026-05-17T18:00:00Z");
+            EventStartTime: "2026-05-17T14:00:00Z",
+            EventEndTime: "2026-05-17T18:00:00Z");
 
+        Assert.Equal("2026-05-17T14:00:00Z", request.EventStartTime);
         Assert.Equal("2026-05-17T18:00:00Z", request.EventEndTime);
     }
 
@@ -97,7 +95,6 @@ public sealed class CreateEventContractTests
         var location = new EventLocationDto(
             "The Backyard",
             "414 Maple Street, Brooklyn, NY 11215",
-            null,
             null);
 
         var response = new CreateEventResponse(

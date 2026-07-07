@@ -99,7 +99,6 @@ public sealed class CreateEventCommandHandlerTests
                 new CreateEventLocation(
                     " The Backyard ",
                     "414 Maple Street, Brooklyn, NY 11215",
-                    "https://meet.example.com/party",
                     "Side gate unlocked from 1:30."),
                 "America/Los_Angeles")
             {
@@ -110,7 +109,6 @@ public sealed class CreateEventCommandHandlerTests
         Assert.NotNull(result.Event.Location);
         Assert.Equal("The Backyard", result.Event.Location.VenueName);
         Assert.Equal("414 Maple Street, Brooklyn, NY 11215", result.Event.Location.Address);
-        Assert.Equal("https://meet.example.com/party", result.Event.Location.OnlineUrl);
         Assert.Equal("Side gate unlocked from 1:30.", result.Event.Location.Notes);
         Assert.Equal("America/Los_Angeles", result.Event.TimeZoneId);
         Assert.NotNull(savedEvent);
@@ -186,7 +184,7 @@ public sealed class CreateEventCommandHandlerTests
                 null,
                 "dinner",
                 null,
-                new CreateEventLocation("  ", null, string.Empty, "   "),
+                new CreateEventLocation("  ", null, "   "),
                 null)
             {
                 CurrentUser = TestUser
@@ -197,11 +195,12 @@ public sealed class CreateEventCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithEndTime_StoresEndTime()
+    public async Task Handle_WithStartAndEndTime_StoresBoth()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var start = now.AddDays(1);
-        var end = start.AddHours(4);
+        var anchor = now.AddDays(1);
+        var start = anchor.AddHours(2);
+        var end = anchor.AddHours(6);
         PlannedEvent? savedEvent = null;
         var repository = new Mock<IEventRepository>();
         repository
@@ -222,18 +221,19 @@ public sealed class CreateEventCommandHandlerTests
         var result = await handler.Handle(
             new CreateEventCommand(
                 "Dinner party",
-                start.ToString("O"),
+                anchor.ToString("O"),
                 "dinner",
                 null,
-                null,
-                null,
-                end.ToString("O"))
+                EventStartTime: start.ToString("O"),
+                EventEndTime: end.ToString("O"))
             {
                 CurrentUser = TestUser
             },
             CancellationToken.None);
 
+        Assert.Equal(start, result.Event.EventStartTime);
         Assert.Equal(end, result.Event.EventEndTime);
+        Assert.Equal(start, savedEvent?.EventStartTime);
         Assert.Equal(end, savedEvent?.EventEndTime);
         unitOfWork.Verify(work => work.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

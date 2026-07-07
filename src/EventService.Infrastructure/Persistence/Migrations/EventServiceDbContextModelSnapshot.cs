@@ -51,6 +51,10 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("event_end_time");
 
+            b.Property<DateTimeOffset?>("EventStartTime")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("event_start_time");
+
             b.Property<DateTimeOffset>("EventTime")
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("event_time");
@@ -116,11 +120,6 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(2000)
                     .HasColumnType("character varying(2000)")
                     .HasColumnName("location_notes");
-
-                b1.Property<string>("OnlineUrl")
-                    .HasMaxLength(2048)
-                    .HasColumnType("character varying(2048)")
-                    .HasColumnName("location_online_url");
 
                 b1.Property<string>("VenueName")
                     .HasMaxLength(200)

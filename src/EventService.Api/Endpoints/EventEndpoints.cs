@@ -131,9 +131,9 @@ internal static class EventEndpoints
                         : new CreateEventLocation(
                             request.Location.VenueName,
                             request.Location.Address,
-                            request.Location.OnlineUrl,
                             request.Location.Notes),
                     request.TimeZoneId,
+                    request.EventStartTime,
                     request.EventEndTime),
                 cancellationToken);
 
@@ -151,9 +151,9 @@ internal static class EventEndpoints
                     : new EventLocationDto(
                         result.Event.Location.VenueName,
                         result.Event.Location.Address,
-                        result.Event.Location.OnlineUrl,
                         result.Event.Location.Notes),
                 result.Event.TimeZoneId,
+                result.Event.EventStartTime,
                 result.Event.EventEndTime);
 
             return Results.Created($"/events/{response.Id}", response);

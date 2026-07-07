@@ -7,4 +7,5 @@ public sealed record CreateEventRequest(
     string? EventDescription,
     EventLocationDto? Location = null,
     string? TimeZoneId = null,
+    string? EventStartTime = null,
     string? EventEndTime = null);
