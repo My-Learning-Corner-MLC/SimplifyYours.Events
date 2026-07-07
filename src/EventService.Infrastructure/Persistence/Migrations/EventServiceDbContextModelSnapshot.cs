@@ -47,6 +47,14 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("text")
                 .HasColumnName("description");
 
+            b.Property<DateTimeOffset?>("EventEndTime")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("event_end_time");
+
+            b.Property<DateTimeOffset?>("EventStartTime")
+                .HasColumnType("timestamp with time zone")
+                .HasColumnName("event_start_time");
+
             b.Property<DateTimeOffset>("EventTime")
                 .HasColumnType("timestamp with time zone")
                 .HasColumnName("event_time");
@@ -66,6 +74,11 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
             b.Property<Guid>("TenantId")
                 .HasColumnType("uuid")
                 .HasColumnName("tenant_id");
+
+            b.Property<string>("TimeZoneId")
+                .HasMaxLength(64)
+                .HasColumnType("character varying(64)")
+                .HasColumnName("time_zone_id");
 
             b.Property<EventType>("Type")
                 .IsRequired()
@@ -88,6 +101,40 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasDatabaseName("ix_events_tenant_id_is_deleted_event_time");
 
             b.ToTable("events", (string)null);
+        });
+
+        modelBuilder.Entity("EventService.Domain.Events.PlannedEvent", b =>
+        {
+            b.OwnsOne("EventService.Domain.Events.EventLocation", "Location", b1 =>
+            {
+                b1.Property<Guid>("PlannedEventId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b1.Property<string>("Address")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("location_address");
+
+                b1.Property<string>("Notes")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)")
+                    .HasColumnName("location_notes");
+
+                b1.Property<string>("VenueName")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("location_venue_name");
+
+                b1.HasKey("PlannedEventId");
+
+                b1.ToTable("events");
+
+                b1.WithOwner()
+                    .HasForeignKey("PlannedEventId");
+            });
+
+            b.Navigation("Location");
         });
 
         modelBuilder.Entity("EventService.Infrastructure.Persistence.Outbox.OutboxMessage", b =>

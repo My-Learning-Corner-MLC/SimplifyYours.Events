@@ -80,4 +80,45 @@ public sealed class QueryEventsContractTests
         Assert.True(response.HasPreviousPage);
         Assert.True(response.HasNextPage);
     }
+
+    [Fact]
+    public void EventSummaryResponse_DefaultsOptionalScheduleAndLocationToNull()
+    {
+        var response = new EventSummaryResponse(
+            Guid.NewGuid(),
+            "Product launch",
+            new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            "event",
+            null,
+            new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 5, 17, 10, 0, 0, TimeSpan.Zero));
+
+        Assert.Null(response.Location);
+        Assert.Null(response.EventStartTime);
+        Assert.Null(response.EventEndTime);
+    }
+
+    [Fact]
+    public void EventSummaryResponse_ExposesLocationAndSchedule()
+    {
+        var startTime = new DateTimeOffset(2026, 7, 5, 14, 0, 0, TimeSpan.Zero);
+        var endTime = new DateTimeOffset(2026, 7, 5, 18, 0, 0, TimeSpan.Zero);
+        var location = new EventLocationDto("The Backyard", "414 Maple Street", "Side gate unlocked");
+
+        var response = new EventSummaryResponse(
+            Guid.NewGuid(),
+            "Mateo turns five",
+            startTime,
+            "birthday",
+            "Backyard party",
+            startTime.AddDays(-10),
+            startTime.AddDays(-2),
+            location,
+            startTime,
+            endTime);
+
+        Assert.Equal(location, response.Location);
+        Assert.Equal(startTime, response.EventStartTime);
+        Assert.Equal(endTime, response.EventEndTime);
+    }
 }

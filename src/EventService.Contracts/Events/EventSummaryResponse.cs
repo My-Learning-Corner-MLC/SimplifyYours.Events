@@ -7,4 +7,7 @@ public sealed record EventSummaryResponse(
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    EventLocationDto? Location = null,
+    DateTimeOffset? EventStartTime = null,
+    DateTimeOffset? EventEndTime = null);

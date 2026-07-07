@@ -13,14 +13,22 @@ public sealed class PlannedEvent
         DateTimeOffset eventTime,
         EventType type,
         string? description,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        EventLocation? location,
+        string? timeZoneId,
+        DateTimeOffset? eventStartTime,
+        DateTimeOffset? eventEndTime)
     {
         Id = id;
         TenantId = tenantId;
         Name = name;
         EventTime = eventTime;
+        EventStartTime = eventStartTime;
+        EventEndTime = eventEndTime;
         Type = type;
         Description = NormalizeOptionalText(description);
+        Location = location;
+        TimeZoneId = NormalizeOptionalText(timeZoneId);
         IsDeleted = false;
         DeletedAt = null;
         CreatedAt = createdAt;
@@ -36,9 +44,17 @@ public sealed class PlannedEvent
 
     public DateTimeOffset EventTime { get; private set; }
 
+    public DateTimeOffset? EventStartTime { get; private set; }
+
+    public DateTimeOffset? EventEndTime { get; private set; }
+
     public EventType Type { get; private set; }
 
     public string? Description { get; private set; }
+
+    public EventLocation? Location { get; private set; }
+
+    public string? TimeZoneId { get; private set; }
 
     public bool IsDeleted { get; private set; }
 
@@ -57,7 +73,11 @@ public sealed class PlannedEvent
         DateTimeOffset eventTime,
         EventType type,
         string? description,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        EventLocation? location = null,
+        string? timeZoneId = null,
+        DateTimeOffset? eventStartTime = null,
+        DateTimeOffset? eventEndTime = null)
     {
         if (id == Guid.Empty)
         {
@@ -81,14 +101,33 @@ public sealed class PlannedEvent
             throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
         }
 
+        var utcEventTime = eventTime.ToUniversalTime();
+        DateTimeOffset? utcEventStartTime = eventStartTime?.ToUniversalTime();
+        DateTimeOffset? utcEventEndTime = eventEndTime?.ToUniversalTime();
+
+        if (utcEventEndTime is not null)
+        {
+            var effectiveStart = utcEventStartTime ?? utcEventTime;
+            if (utcEventEndTime < effectiveStart)
+            {
+                throw new ArgumentException(
+                    "Event end time must be at or after the start time.",
+                    nameof(eventEndTime));
+            }
+        }
+
         return new PlannedEvent(
             id,
             tenantId,
             normalizedName,
-            eventTime.ToUniversalTime(),
+            utcEventTime,
             type,
             description,
-            createdAt.ToUniversalTime());
+            createdAt.ToUniversalTime(),
+            location,
+            timeZoneId,
+            utcEventStartTime,
+            utcEventEndTime);
     }
 
     public void UpdateDetails(

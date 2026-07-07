@@ -67,7 +67,15 @@ internal static class EventEndpoints
                         item.EventType,
                         item.EventDescription,
                         item.CreatedAt,
-                        item.UpdatedAt))
+                        item.UpdatedAt,
+                        item.Location is null
+                            ? null
+                            : new EventLocationDto(
+                                item.Location.VenueName,
+                                item.Location.Address,
+                                item.Location.Notes),
+                        item.EventStartTime,
+                        item.EventEndTime))
                     .ToArray(),
                 result.PageNumber,
                 result.PageSize,

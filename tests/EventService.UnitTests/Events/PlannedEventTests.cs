@@ -171,6 +171,136 @@ public sealed class PlannedEventTests
     }
 
     [Fact]
+    public void Create_WithLocationAndTimeZone_StoresBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var location = EventLocation.Create(
+            "The Backyard",
+            "414 Maple Street, Brooklyn, NY 11215",
+            "Side gate unlocked from 1:30.");
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Mateo turns five",
+            now.AddDays(1),
+            EventType.Birthday,
+            null,
+            now,
+            location,
+            "America/Los_Angeles");
+
+        Assert.NotNull(plannedEvent.Location);
+        Assert.Equal("The Backyard", plannedEvent.Location.VenueName);
+        Assert.Equal("414 Maple Street, Brooklyn, NY 11215", plannedEvent.Location.Address);
+        Assert.Equal("Side gate unlocked from 1:30.", plannedEvent.Location.Notes);
+        Assert.Equal("America/Los_Angeles", plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void Create_WithoutLocationAndTimeZone_StoresNulls()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Launch,
+            null,
+            now);
+
+        Assert.Null(plannedEvent.Location);
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void Create_WithStartAndEndTime_StoresBothInUtc()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var anchor = now.AddDays(1);
+        var start = anchor.AddHours(2);
+        var end = anchor.AddHours(6);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            anchor,
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: start,
+            eventEndTime: end);
+
+        Assert.Equal(start, plannedEvent.EventStartTime);
+        Assert.Equal(end, plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void Create_WithoutStartAndEndTime_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            now.AddDays(1),
+            EventType.Dinner,
+            null,
+            now);
+
+        Assert.Null(plannedEvent.EventStartTime);
+        Assert.Null(plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void Create_WhenEndTimeBeforeStartTime_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var anchor = now.AddDays(1);
+        var start = anchor.AddHours(4);
+
+        var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            anchor,
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: start,
+            eventEndTime: start.AddHours(-1)));
+
+        Assert.Equal("eventEndTime", exception.ParamName);
+    }
+
+    [Fact]
+    public void Create_WhenTimeZoneIdIsBlank_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            now.AddDays(1),
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: "  ");
+
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
     public void Create_WhenDescriptionIsBlank_StoresNull()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);

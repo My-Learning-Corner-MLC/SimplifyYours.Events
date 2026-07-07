@@ -29,6 +29,12 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .HasColumnName("event_time")
             .IsRequired();
 
+        builder.Property(plannedEvent => plannedEvent.EventStartTime)
+            .HasColumnName("event_start_time");
+
+        builder.Property(plannedEvent => plannedEvent.EventEndTime)
+            .HasColumnName("event_end_time");
+
         builder.Property(plannedEvent => plannedEvent.Type)
             .HasColumnName("type")
             .HasConversion<string>()
@@ -37,6 +43,25 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
 
         builder.Property(plannedEvent => plannedEvent.Description)
             .HasColumnName("description");
+
+        builder.OwnsOne(plannedEvent => plannedEvent.Location, location =>
+        {
+            location.Property(eventLocation => eventLocation.VenueName)
+                .HasColumnName("location_venue_name")
+                .HasMaxLength(EventLocation.VenueNameMaxLength);
+
+            location.Property(eventLocation => eventLocation.Address)
+                .HasColumnName("location_address")
+                .HasMaxLength(EventLocation.AddressMaxLength);
+
+            location.Property(eventLocation => eventLocation.Notes)
+                .HasColumnName("location_notes")
+                .HasMaxLength(EventLocation.NotesMaxLength);
+        });
+
+        builder.Property(plannedEvent => plannedEvent.TimeZoneId)
+            .HasColumnName("time_zone_id")
+            .HasMaxLength(64);
 
         builder.Property(plannedEvent => plannedEvent.IsDeleted)
             .HasColumnName("is_deleted")
