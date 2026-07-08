@@ -7,6 +7,12 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+
+    <!-- Exclude EF Core auto-generated code (migrations + model snapshot) from
+         coverage. It is generated, not hand-written logic, so it is not
+         meaningfully unit-testable and would otherwise sink the CI diff-coverage
+         gate (diff-cover over changed lines). -->
+    <ExcludeByFile>**/Migrations/*.cs</ExcludeByFile>
   </PropertyGroup>
 
   <ItemGroup>

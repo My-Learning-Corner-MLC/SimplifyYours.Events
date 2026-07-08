@@ -21,14 +21,14 @@ public sealed class CreateEventCommandHandler(
     {
         var currentUser = request.CurrentUser;
         var now = timeProvider.GetUtcNow();
-        var eventTime = ResolveEventTime(request.EventTime, now);
+        var eventDate = ResolveEventDate(request.EventDate, now);
         var eventType = ResolveEventType(request.EventType);
 
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             currentUser.TenantId,
             request.EventName,
-            eventTime,
+            eventDate,
             eventType,
             request.EventDescription,
             now);
@@ -40,27 +40,27 @@ public sealed class CreateEventCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
-            "Event created. EventId: {EventId}. EventType: {EventType}. EventTime: {EventTime}.",
+            "Event created. EventId: {EventId}. EventType: {EventType}. EventDate: {EventDate}.",
             plannedEvent.Id,
             plannedEvent.Type,
-            plannedEvent.EventTime);
+            plannedEvent.EventDate);
 
         return new CreateEventResult(EventDetails.From(plannedEvent));
     }
 
-    private static DateTimeOffset ResolveEventTime(string? value, DateTimeOffset now)
+    private static DateOnly ResolveEventDate(string? value, DateTimeOffset now)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return now;
+            return DateOnly.FromDateTime(now.UtcDateTime);
         }
 
-        if (EventParsing.TryParseEventTime(value, out var eventTime))
+        if (EventParsing.TryParseEventDate(value, out var eventDate))
         {
-            return eventTime;
+            return eventDate;
         }
 
-        throw new ArgumentException("Event time must be a valid date-time string.", nameof(value));
+        throw new ArgumentException("Event date must be a valid date string.", nameof(value));
     }
 
     private static EventType ResolveEventType(string value)

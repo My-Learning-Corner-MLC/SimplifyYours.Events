@@ -23,21 +23,21 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
             .Must((command, eventType) => EventParsing.TryParseEventType(eventType, out _))
             .WithMessage("Event type must be one of: birthday, wedding, event.");
 
-        RuleFor(command => command.EventTime)
+        RuleFor(command => command.EventDate)
             .Cascade(CascadeMode.Stop)
-            .Must((command, eventTime) => string.IsNullOrWhiteSpace(eventTime)
-                || EventParsing.TryParseEventTime(eventTime, out _))
-            .WithMessage("Event time must be a valid date-time string.")
-            .Must((command, eventTime) =>
+            .Must((command, eventDate) => string.IsNullOrWhiteSpace(eventDate)
+                || EventParsing.TryParseEventDate(eventDate, out _))
+            .WithMessage("Event date must be a valid date string.")
+            .Must((command, eventDate) =>
             {
-                if (string.IsNullOrWhiteSpace(eventTime))
+                if (string.IsNullOrWhiteSpace(eventDate))
                 {
                     return true;
                 }
 
-                return EventParsing.TryParseEventTime(eventTime, out var parsedEventTime)
-                    && parsedEventTime >= timeProvider.GetUtcNow();
+                return EventParsing.TryParseEventDate(eventDate, out var parsedEventDate)
+                    && parsedEventDate >= DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
             })
-            .WithMessage("Event time must be now or in the future.");
+            .WithMessage("Event date must be today or in the future.");
     }
 }

@@ -9,20 +9,20 @@ public sealed class PlannedEventTests
     {
         var eventId = Guid.NewGuid();
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var eventTime = now.AddDays(1);
+        var eventDate = DateOnly.FromDateTime(now.DateTime).AddDays(1);
 
         var plannedEvent = PlannedEvent.Create(
             eventId,
             Guid.NewGuid(),
             " Product launch ",
-            eventTime,
+            eventDate,
             EventType.Event,
             " Launch details ",
             now);
 
         Assert.Equal(eventId, plannedEvent.Id);
         Assert.Equal("Product launch", plannedEvent.Name);
-        Assert.Equal(eventTime, plannedEvent.EventTime);
+        Assert.Equal(eventDate, plannedEvent.EventDate);
         Assert.Equal(EventType.Event, plannedEvent.Type);
         Assert.Equal("Launch details", plannedEvent.Description);
         Assert.False(plannedEvent.IsDeleted);
@@ -36,26 +36,27 @@ public sealed class PlannedEventTests
     public void UpdateDetails_UpdatesEditableFieldsAndConcurrencyToken()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            eventDate.AddDays(1),
             EventType.Event,
             "Old details",
             now);
         var originalToken = plannedEvent.ConcurrencyToken;
         var updatedAt = now.AddMinutes(5);
-        var newEventTime = now.AddDays(2);
+        var newEventDate = eventDate.AddDays(2);
 
         plannedEvent.UpdateDetails(
             " Updated launch ",
-            newEventTime,
+            newEventDate,
             " Updated details ",
             updatedAt);
 
         Assert.Equal("Updated launch", plannedEvent.Name);
-        Assert.Equal(newEventTime, plannedEvent.EventTime);
+        Assert.Equal(newEventDate, plannedEvent.EventDate);
         Assert.Equal("Updated details", plannedEvent.Description);
         Assert.Equal(updatedAt, plannedEvent.UpdatedAt);
         Assert.Equal(EventType.Event, plannedEvent.Type);
@@ -68,16 +69,17 @@ public sealed class PlannedEventTests
     public void UpdateDetails_WhenDescriptionIsBlank_StoresNull()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            eventDate.AddDays(1),
             EventType.Event,
             "Old details",
             now);
 
-        plannedEvent.UpdateDetails("Launch plan", now.AddDays(2), "  ", now.AddMinutes(5));
+        plannedEvent.UpdateDetails("Launch plan", eventDate.AddDays(2), "  ", now.AddMinutes(5));
 
         Assert.Null(plannedEvent.Description);
     }
@@ -86,18 +88,19 @@ public sealed class PlannedEventTests
     public void UpdateDetails_WhenNameIsBlank_Throws()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            eventDate.AddDays(1),
             EventType.Event,
             null,
             now);
 
         var exception = Assert.Throws<ArgumentException>(() => plannedEvent.UpdateDetails(
             "  ",
-            now.AddDays(2),
+            eventDate.AddDays(2),
             null,
             now.AddMinutes(5)));
 
@@ -112,7 +115,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Wedding plan",
-            now.AddDays(10),
+            DateOnly.FromDateTime(now.DateTime).AddDays(10),
             EventType.Wedding,
             null,
             now);
@@ -145,7 +148,7 @@ public sealed class PlannedEventTests
             Guid.Empty,
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now));
@@ -162,12 +165,142 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "  ",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now));
 
         Assert.Equal("name", exception.ParamName);
+    }
+
+    [Fact]
+    public void Create_WithLocationAndTimeZone_StoresBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var location = EventLocation.Create(
+            "The Backyard",
+            "414 Maple Street, Brooklyn, NY 11215",
+            "Side gate unlocked from 1:30.");
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Mateo turns five",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Birthday,
+            null,
+            now,
+            location,
+            "America/Los_Angeles");
+
+        Assert.NotNull(plannedEvent.Location);
+        Assert.Equal("The Backyard", plannedEvent.Location.VenueName);
+        Assert.Equal("414 Maple Street, Brooklyn, NY 11215", plannedEvent.Location.Address);
+        Assert.Equal("Side gate unlocked from 1:30.", plannedEvent.Location.Notes);
+        Assert.Equal("America/Los_Angeles", plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void Create_WithoutLocationAndTimeZone_StoresNulls()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Launch,
+            null,
+            now);
+
+        Assert.Null(plannedEvent.Location);
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void Create_WithStartAndEndTime_StoresBothInUtc()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var anchor = DateOnly.FromDateTime(now.DateTime).AddDays(1);
+        var start = new TimeOnly(2, 0);
+        var end = new TimeOnly(6, 0);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            anchor,
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: start,
+            eventEndTime: end);
+
+        Assert.Equal(start, plannedEvent.EventStartTime);
+        Assert.Equal(end, plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void Create_WithoutStartAndEndTime_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Dinner,
+            null,
+            now);
+
+        Assert.Null(plannedEvent.EventStartTime);
+        Assert.Null(plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void Create_WhenEndTimeBeforeStartTime_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var anchor = DateOnly.FromDateTime(now.DateTime).AddDays(1);
+        var start = new TimeOnly(4, 0);
+
+        var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Dinner party",
+            anchor,
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: start,
+            eventEndTime: start.AddHours(-1)));
+
+        Assert.Equal("eventEndTime", exception.ParamName);
+    }
+
+    [Fact]
+    public void Create_WhenTimeZoneIdIsBlank_StoresNull()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Dinner,
+            null,
+            now,
+            location: null,
+            timeZoneId: "  ");
+
+        Assert.Null(plannedEvent.TimeZoneId);
     }
 
     [Fact]
@@ -179,7 +312,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             "  ",
             now);
@@ -195,7 +328,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now);
@@ -219,7 +352,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now);

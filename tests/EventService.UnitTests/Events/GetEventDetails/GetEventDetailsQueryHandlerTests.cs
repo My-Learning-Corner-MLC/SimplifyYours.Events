@@ -14,13 +14,13 @@ public sealed class GetEventDetailsQueryHandlerTests
     {
         var eventId = Guid.NewGuid();
         var createdAt = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var eventTime = createdAt.AddDays(7);
+        var eventDate = DateOnly.FromDateTime(createdAt.DateTime).AddDays(7);
         var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
         var plannedEvent = PlannedEvent.Create(
             eventId,
             currentUser.TenantId,
             "Product launch",
-            eventTime,
+            eventDate,
             EventType.Event,
             "Launch details",
             createdAt);
@@ -39,7 +39,7 @@ public sealed class GetEventDetailsQueryHandlerTests
         Assert.NotNull(result);
         Assert.Equal(eventId, result.Event.Id);
         Assert.Equal("Product launch", result.Event.EventName);
-        Assert.Equal(eventTime, result.Event.EventTime);
+        Assert.Equal(eventDate, result.Event.EventDate);
         Assert.Equal("event", result.Event.EventType);
         Assert.Equal("Launch details", result.Event.EventDescription);
         Assert.Equal(createdAt, result.Event.CreatedAt);

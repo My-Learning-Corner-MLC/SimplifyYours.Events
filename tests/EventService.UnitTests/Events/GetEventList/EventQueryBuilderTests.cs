@@ -79,12 +79,12 @@ public sealed class EventListQueryBuilderTests
     }
 
     [Fact]
-    public void ApplyFilters_WhenTimeFilterIsUpcoming_ReturnsCurrentAndFutureEvents()
+    public void ApplyFilters_WhenTimeFilterIsUpcoming_ReturnsTodayAndFutureEvents()
     {
         var events = new[]
         {
-            CreateEvent("Past event", _now.AddTicks(-1), EventType.Event, null, _now),
-            CreateEvent("Current event", _now, EventType.Event, null, _now),
+            CreateEvent("Past event", _now.AddDays(-1), EventType.Event, null, _now),
+            CreateEvent("Today's event", _now, EventType.Event, null, _now),
             CreateEvent("Future event", _now.AddDays(1), EventType.Event, null, _now)
         };
 
@@ -93,15 +93,16 @@ public sealed class EventListQueryBuilderTests
             .Select(plannedEvent => plannedEvent.Name)
             .ToArray();
 
-        Assert.Equal(new[] { "Current event", "Future event" }, result);
+        Assert.Equal(new[] { "Today's event", "Future event" }, result);
     }
 
     [Fact]
-    public void ApplyFilters_WhenTimeFilterIsPast_ReturnsPastEvents()
+    public void ApplyFilters_WhenTimeFilterIsPast_ReturnsPastEventsOnly()
     {
         var events = new[]
         {
-            CreateEvent("Past event", _now.AddTicks(-1), EventType.Event, null, _now),
+            CreateEvent("Past event", _now.AddDays(-1), EventType.Event, null, _now),
+            CreateEvent("Today's event", _now, EventType.Event, null, _now),
             CreateEvent("Future event", _now.AddDays(1), EventType.Event, null, _now)
         };
 
@@ -170,7 +171,7 @@ public sealed class EventListQueryBuilderTests
 
     private static PlannedEvent CreateEvent(
         string name,
-        DateTimeOffset eventTime,
+        DateTimeOffset eventDate,
         EventType eventType,
         string? description,
         DateTimeOffset createdAt)
@@ -179,7 +180,7 @@ public sealed class EventListQueryBuilderTests
             Guid.NewGuid(),
             TestTenantId,
             name,
-            eventTime,
+            DateOnly.FromDateTime(eventDate.DateTime),
             eventType,
             description,
             createdAt);

@@ -21,13 +21,13 @@ public sealed class UpdateEventCommandHandlerTests
             eventId,
             currentUser.TenantId,
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             "Old details",
             now);
         var expectedToken = plannedEvent.ConcurrencyToken;
         var expectedTokenText = Convert.ToBase64String(expectedToken);
-        var newEventTime = now.AddDays(2);
+        var newEventDate = DateOnly.FromDateTime(now.DateTime).AddDays(2);
         var repository = new Mock<IEventRepository>();
         repository
             .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), false))
@@ -51,7 +51,7 @@ public sealed class UpdateEventCommandHandlerTests
             new UpdateEventCommand(
                 eventId,
                 " Updated launch ",
-                newEventTime.ToString("O"),
+                newEventDate.ToString("yyyy-MM-dd"),
                 " Updated details ",
                 expectedTokenText)
             {
@@ -63,7 +63,7 @@ public sealed class UpdateEventCommandHandlerTests
         Assert.NotNull(result.Event);
         Assert.Equal(eventId, result.Event.Id);
         Assert.Equal("Updated launch", result.Event.EventName);
-        Assert.Equal(newEventTime, result.Event.EventTime);
+        Assert.Equal(newEventDate, result.Event.EventDate);
         Assert.Equal("event", result.Event.EventType);
         Assert.Equal("Updated details", result.Event.EventDescription);
         Assert.Equal(now, result.Event.CreatedAt);
@@ -109,7 +109,7 @@ public sealed class UpdateEventCommandHandlerTests
             new UpdateEventCommand(
                 eventId,
                 "Updated launch",
-                now.AddDays(1).ToString("O"),
+                DateOnly.FromDateTime(now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
                 null,
                 Convert.ToBase64String(Guid.NewGuid().ToByteArray()))
             {
@@ -139,7 +139,7 @@ public sealed class UpdateEventCommandHandlerTests
             eventId,
             currentUser.TenantId,
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now);
@@ -167,7 +167,7 @@ public sealed class UpdateEventCommandHandlerTests
             new UpdateEventCommand(
                 eventId,
                 "Updated launch",
-                now.AddDays(2).ToString("O"),
+                DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
                 null,
                 Convert.ToBase64String(expectedToken))
             {

@@ -3,8 +3,11 @@ namespace EventService.Contracts.Events;
 public sealed record EventSummaryResponse(
     Guid Id,
     string EventName,
-    DateTimeOffset EventTime,
+    DateOnly EventDate,
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    EventLocationDto? Location = null,
+    TimeOnly? EventStartTime = null,
+    TimeOnly? EventEndTime = null);

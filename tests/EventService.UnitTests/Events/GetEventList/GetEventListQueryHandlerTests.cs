@@ -77,11 +77,12 @@ public sealed class GetEventListQueryHandlerTests
     public async Task Handle_MapsRepositoryPageToResult()
     {
         var createdAt = _now.AddDays(-1);
+        var eventDate = DateOnly.FromDateTime(_now.DateTime).AddDays(7);
         var plannedEvent = PlannedEvent.Create(
             Guid.Parse("30f4b3ce-b989-4d6b-9ea2-909d4118a45d"),
             Guid.NewGuid(),
             "Product launch",
-            _now.AddDays(7),
+            eventDate,
             EventType.Event,
             "Launch details",
             createdAt);
@@ -98,17 +99,59 @@ public sealed class GetEventListQueryHandlerTests
         var item = Assert.Single(result.Items);
         Assert.Equal(plannedEvent.Id, item.Id);
         Assert.Equal("Product launch", item.EventName);
-        Assert.Equal(plannedEvent.EventTime, item.EventTime);
+        Assert.Equal(plannedEvent.EventDate, item.EventDate);
         Assert.Equal("event", item.EventType);
         Assert.Equal("Launch details", item.EventDescription);
         Assert.Equal(createdAt, item.CreatedAt);
         Assert.Equal(createdAt, item.UpdatedAt);
+        Assert.Null(item.Location);
+        Assert.Null(item.EventStartTime);
+        Assert.Null(item.EventEndTime);
         Assert.Equal(2, result.PageNumber);
         Assert.Equal(10, result.PageSize);
         Assert.Equal(25, result.TotalCount);
         Assert.Equal(3, result.TotalPages);
         Assert.True(result.HasPreviousPage);
         Assert.True(result.HasNextPage);
+    }
+
+    [Fact]
+    public async Task Handle_MapsLocationAndScheduleWhenPresent()
+    {
+        var createdAt = _now.AddDays(-1);
+        var eventDate = DateOnly.FromDateTime(_now.DateTime).AddDays(7);
+        var startTime = new TimeOnly(14, 0);
+        var endTime = startTime.AddHours(4);
+        var location = EventLocation.Create("The Backyard", "414 Maple Street", "Side gate unlocked");
+        var plannedEvent = PlannedEvent.Create(
+            Guid.Parse("6c2f0a9d-1b7e-4c2a-9f4a-2d5b6e7c8a90"),
+            Guid.NewGuid(),
+            "Mateo turns five",
+            eventDate,
+            EventType.Birthday,
+            "Backyard party",
+            createdAt,
+            location,
+            "America/Los_Angeles",
+            startTime,
+            endTime);
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.ListAsync(It.IsAny<EventListQueryOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EventListPage(new[] { plannedEvent }, 1, 20, 1));
+        var handler = CreateHandler(repository.Object);
+
+        var result = await handler.Handle(
+            new GetEventListQuery(null, null, null, null, null, null, null) { CurrentUser = TestUser },
+            CancellationToken.None);
+
+        var item = Assert.Single(result.Items);
+        Assert.NotNull(item.Location);
+        Assert.Equal("The Backyard", item.Location!.VenueName);
+        Assert.Equal("414 Maple Street", item.Location.Address);
+        Assert.Equal("Side gate unlocked", item.Location.Notes);
+        Assert.Equal(startTime, item.EventStartTime);
+        Assert.Equal(endTime, item.EventEndTime);
     }
 
     [Fact]

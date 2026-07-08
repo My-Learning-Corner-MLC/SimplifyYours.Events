@@ -3,21 +3,17 @@ using EventService.Domain.Events;
 
 namespace EventService.Application.Events;
 
-internal static class EventParsing
+public static class EventParsing
 {
-    public static bool TryParseEventTime(string? value, out DateTimeOffset eventTime)
+    public static bool TryParseEventDate(string? value, out DateOnly eventDate)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            eventTime = default;
+            eventDate = default;
             return false;
         }
 
-        return DateTimeOffset.TryParse(
-            value,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-            out eventTime);
+        return DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out eventDate);
     }
 
     public static bool TryParseEventType(string? value, out EventType eventType)
