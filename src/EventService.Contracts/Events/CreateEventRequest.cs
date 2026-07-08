@@ -2,7 +2,7 @@ namespace EventService.Contracts.Events;
 
 public sealed record CreateEventRequest(
     string EventName,
-    string? EventTime,
+    string? EventDate,
     string EventType,
     string? EventDescription,
     EventLocationDto? Location = null,

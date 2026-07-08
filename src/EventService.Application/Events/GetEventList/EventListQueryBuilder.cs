@@ -13,7 +13,7 @@ public static class EventListQueryBuilder
         query = query.Where(plannedEvent => plannedEvent.TenantId == options.TenantId);
         query = ApplySearch(query, options.Search);
         query = ApplyEventTypeFilter(query, options.EventType);
-        query = ApplyTimeFilter(query, options.TimeFilter, options.CurrentUtcDateTime);
+        query = ApplyTimeFilter(query, options.TimeFilter, DateOnly.FromDateTime(options.CurrentUtcDateTime.UtcDateTime));
 
         return query;
     }
@@ -67,12 +67,12 @@ public static class EventListQueryBuilder
     private static IQueryable<PlannedEvent> ApplyTimeFilter(
         IQueryable<PlannedEvent> query,
         EventTimeFilter timeFilter,
-        DateTimeOffset currentUtcDateTime)
+        DateOnly today)
     {
         return timeFilter switch
         {
-            EventTimeFilter.Upcoming => query.Where(plannedEvent => plannedEvent.EventTime >= currentUtcDateTime),
-            EventTimeFilter.Past => query.Where(plannedEvent => plannedEvent.EventTime < currentUtcDateTime),
+            EventTimeFilter.Upcoming => query.Where(plannedEvent => plannedEvent.EventDate >= today),
+            EventTimeFilter.Past => query.Where(plannedEvent => plannedEvent.EventDate < today),
             _ => query
         };
     }

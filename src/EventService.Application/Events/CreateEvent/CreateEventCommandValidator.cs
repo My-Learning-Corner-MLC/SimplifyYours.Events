@@ -24,33 +24,33 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
             .Must((command, eventType) => EventParsing.TryParseEventType(eventType, out _))
             .WithMessage("Event type must be one of: birthday, wedding, event, anniversary, launch, dinner, other.");
 
-        RuleFor(command => command.EventTime)
+        RuleFor(command => command.EventDate)
             .Cascade(CascadeMode.Stop)
-            .Must((command, eventTime) => string.IsNullOrWhiteSpace(eventTime)
-                || EventParsing.TryParseEventTime(eventTime, out _))
-            .WithMessage("Event time must be a valid date-time string.")
-            .Must((command, eventTime) =>
+            .Must((command, eventDate) => string.IsNullOrWhiteSpace(eventDate)
+                || EventParsing.TryParseEventDate(eventDate, out _))
+            .WithMessage("Event date must be a valid date string.")
+            .Must((command, eventDate) =>
             {
-                if (string.IsNullOrWhiteSpace(eventTime))
+                if (string.IsNullOrWhiteSpace(eventDate))
                 {
                     return true;
                 }
 
-                return EventParsing.TryParseEventTime(eventTime, out var parsedEventTime)
-                    && parsedEventTime >= timeProvider.GetUtcNow();
+                return EventParsing.TryParseEventDate(eventDate, out var parsedEventDate)
+                    && parsedEventDate >= DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
             })
-            .WithMessage("Event time must be now or in the future.");
+            .WithMessage("Event date must be today or in the future.");
 
         RuleFor(command => command.EventStartTime)
             .Must(eventStartTime => string.IsNullOrWhiteSpace(eventStartTime)
                 || EventParsing.TryParseEventTime(eventStartTime, out _))
-            .WithMessage("Event start time must be a valid date-time string.");
+            .WithMessage("Event start time must be a valid time string.");
 
         RuleFor(command => command.EventEndTime)
             .Cascade(CascadeMode.Stop)
             .Must((command, eventEndTime) => string.IsNullOrWhiteSpace(eventEndTime)
                 || EventParsing.TryParseEventTime(eventEndTime, out _))
-            .WithMessage("Event end time must be a valid date-time string.")
+            .WithMessage("Event end time must be a valid time string.")
             .Must((command, eventEndTime) =>
             {
                 if (string.IsNullOrWhiteSpace(eventEndTime))
@@ -63,8 +63,13 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
                     return false;
                 }
 
-                var comparableStart = ResolveComparableStart(command);
-                return comparableStart is null || parsedEndTime >= comparableStart;
+                if (string.IsNullOrWhiteSpace(command.EventStartTime)
+                    || !EventParsing.TryParseEventTime(command.EventStartTime, out var parsedStartTime))
+                {
+                    return true;
+                }
+
+                return parsedEndTime >= parsedStartTime;
             })
             .WithMessage("Event end time must be at or after the start time.");
 
@@ -87,22 +92,5 @@ public sealed class CreateEventCommandValidator : AbstractValidator<CreateEventC
                 .MaximumLength(EventLocation.NotesMaxLength)
                 .WithMessage($"Location notes must not exceed {EventLocation.NotesMaxLength} characters.");
         });
-    }
-
-    private static DateTimeOffset? ResolveComparableStart(CreateEventCommand command)
-    {
-        if (!string.IsNullOrWhiteSpace(command.EventStartTime)
-            && EventParsing.TryParseEventTime(command.EventStartTime, out var parsedStartTime))
-        {
-            return parsedStartTime;
-        }
-
-        if (!string.IsNullOrWhiteSpace(command.EventTime)
-            && EventParsing.TryParseEventTime(command.EventTime, out var parsedEventTime))
-        {
-            return parsedEventTime;
-        }
-
-        return null;
     }
 }

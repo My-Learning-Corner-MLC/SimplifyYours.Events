@@ -2,6 +2,6 @@ namespace EventService.Contracts.Events;
 
 public sealed record UpdateEventRequest(
     string EventName,
-    string EventTime,
+    string EventDate,
     string? EventDescription,
     string ConcurrencyToken);

@@ -6,6 +6,6 @@ namespace EventService.Application.Events.UpdateEvent;
 public sealed record UpdateEventCommand(
     Guid EventId,
     string EventName,
-    string EventTime,
+    string EventDate,
     string? EventDescription,
     string ConcurrencyToken) : BaseCommand, IRequest<UpdateEventResult>;

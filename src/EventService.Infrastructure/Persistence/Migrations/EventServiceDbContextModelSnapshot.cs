@@ -47,17 +47,17 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("text")
                 .HasColumnName("description");
 
-            b.Property<DateTimeOffset?>("EventEndTime")
-                .HasColumnType("timestamp with time zone")
+            b.Property<DateOnly>("EventDate")
+                .HasColumnType("date")
+                .HasColumnName("event_date");
+
+            b.Property<TimeOnly?>("EventEndTime")
+                .HasColumnType("time without time zone")
                 .HasColumnName("event_end_time");
 
-            b.Property<DateTimeOffset?>("EventStartTime")
-                .HasColumnType("timestamp with time zone")
+            b.Property<TimeOnly?>("EventStartTime")
+                .HasColumnType("time without time zone")
                 .HasColumnName("event_start_time");
-
-            b.Property<DateTimeOffset>("EventTime")
-                .HasColumnType("timestamp with time zone")
-                .HasColumnName("event_time");
 
             b.Property<bool>("IsDeleted")
                 .ValueGeneratedOnAdd()
@@ -94,11 +94,11 @@ partial class EventServiceDbContextModelSnapshot : ModelSnapshot
             b.HasKey("Id")
                 .HasName("pk_events");
 
-            b.HasIndex("IsDeleted", "EventTime")
-                .HasDatabaseName("ix_events_is_deleted_event_time");
+            b.HasIndex("IsDeleted", "EventDate")
+                .HasDatabaseName("ix_events_is_deleted_event_date");
 
-            b.HasIndex("TenantId", "IsDeleted", "EventTime")
-                .HasDatabaseName("ix_events_tenant_id_is_deleted_event_time");
+            b.HasIndex("TenantId", "IsDeleted", "EventDate")
+                .HasDatabaseName("ix_events_tenant_id_is_deleted_event_date");
 
             b.ToTable("events", (string)null);
         });

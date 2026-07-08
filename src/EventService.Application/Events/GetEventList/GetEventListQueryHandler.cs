@@ -35,11 +35,14 @@ public sealed class GetEventListQueryHandler(
             .Select(plannedEvent => new EventSummaryResult(
                 plannedEvent.Id,
                 plannedEvent.Name,
-                plannedEvent.EventTime,
+                plannedEvent.EventDate,
                 plannedEvent.Type.ToString().ToLowerInvariant(),
                 plannedEvent.Description,
                 plannedEvent.CreatedAt,
-                plannedEvent.UpdatedAt))
+                plannedEvent.UpdatedAt,
+                EventLocationDetails.From(plannedEvent.Location),
+                plannedEvent.EventStartTime,
+                plannedEvent.EventEndTime))
             .ToArray();
 
         var result = new GetEventListResult(

@@ -20,7 +20,7 @@ public sealed class CreateEventCommandHandlerTests
     public async Task Handle_CreatesAndSavesEvent()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var eventTime = now.AddDays(3);
+        var eventDate = DateOnly.FromDateTime(now.DateTime).AddDays(3);
         PlannedEvent? savedEvent = null;
         var repository = new Mock<IEventRepository>();
         repository
@@ -39,7 +39,7 @@ public sealed class CreateEventCommandHandlerTests
             NullLogger<CreateEventCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new CreateEventCommand("Wedding plan", eventTime.ToString("O"), "wedding", "Details")
+            new CreateEventCommand("Wedding plan", eventDate.ToString("yyyy-MM-dd"), "wedding", "Details")
             {
                 CurrentUser = TestUser
             },
@@ -47,7 +47,7 @@ public sealed class CreateEventCommandHandlerTests
 
         Assert.NotEqual(Guid.Empty, result.Event.Id);
         Assert.Equal("Wedding plan", result.Event.EventName);
-        Assert.Equal(eventTime, result.Event.EventTime);
+        Assert.Equal(eventDate, result.Event.EventDate);
         Assert.Equal("wedding", result.Event.EventType);
         Assert.Equal("Details", result.Event.EventDescription);
         Assert.Equal(now, result.Event.CreatedAt);
@@ -198,9 +198,9 @@ public sealed class CreateEventCommandHandlerTests
     public async Task Handle_WithStartAndEndTime_StoresBoth()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var anchor = now.AddDays(1);
-        var start = anchor.AddHours(2);
-        var end = anchor.AddHours(6);
+        var eventDate = DateOnly.FromDateTime(now.DateTime).AddDays(1);
+        var start = new TimeOnly(14, 0);
+        var end = new TimeOnly(18, 0);
         PlannedEvent? savedEvent = null;
         var repository = new Mock<IEventRepository>();
         repository
@@ -221,11 +221,11 @@ public sealed class CreateEventCommandHandlerTests
         var result = await handler.Handle(
             new CreateEventCommand(
                 "Dinner party",
-                anchor.ToString("O"),
+                eventDate.ToString("yyyy-MM-dd"),
                 "dinner",
                 null,
-                EventStartTime: start.ToString("O"),
-                EventEndTime: end.ToString("O"))
+                EventStartTime: start.ToString("HH:mm"),
+                EventEndTime: end.ToString("HH:mm"))
             {
                 CurrentUser = TestUser
             },
@@ -239,7 +239,7 @@ public sealed class CreateEventCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEventTimeIsOmitted_DefaultsToNow()
+    public async Task Handle_WhenEventDateIsOmitted_DefaultsToToday()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         PlannedEvent? savedEvent = null;
@@ -266,8 +266,9 @@ public sealed class CreateEventCommandHandlerTests
             },
             CancellationToken.None);
 
-        Assert.Equal(now, result.Event.EventTime);
-        Assert.Equal(now, savedEvent?.EventTime);
+        var today = DateOnly.FromDateTime(now.DateTime);
+        Assert.Equal(today, result.Event.EventDate);
+        Assert.Equal(today, savedEvent?.EventDate);
         repository.Verify(
             repo => repo.AddAsync(It.IsAny<PlannedEvent>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -278,7 +279,7 @@ public sealed class CreateEventCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEventTimeIsInvalid_Throws()
+    public async Task Handle_WhenEventDateIsInvalid_Throws()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
         var repository = new Mock<IEventRepository>();

@@ -9,7 +9,8 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
     {
         builder.ToTable("outbox_messages");
 
-        builder.HasKey(message => message.Id);
+        builder.HasKey(message => message.Id)
+            .HasName("pk_outbox_messages");
 
         builder.Property(message => message.Id)
             .HasColumnName("id")

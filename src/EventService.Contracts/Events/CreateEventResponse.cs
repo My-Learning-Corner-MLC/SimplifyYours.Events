@@ -3,7 +3,7 @@ namespace EventService.Contracts.Events;
 public sealed record CreateEventResponse(
     Guid Id,
     string EventName,
-    DateTimeOffset EventTime,
+    DateOnly EventDate,
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,
@@ -11,5 +11,5 @@ public sealed record CreateEventResponse(
     string ConcurrencyToken,
     EventLocationDto? Location = null,
     string? TimeZoneId = null,
-    DateTimeOffset? EventStartTime = null,
-    DateTimeOffset? EventEndTime = null);
+    TimeOnly? EventStartTime = null,
+    TimeOnly? EventEndTime = null);

@@ -20,15 +20,15 @@ public sealed class UpdateEventCommandValidator : AbstractValidator<UpdateEventC
         RuleFor(command => command.EventDescription)
             .MaximumLength(5000);
 
-        RuleFor(command => command.EventTime)
+        RuleFor(command => command.EventDate)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Must((command, eventTime) => EventParsing.TryParseEventTime(eventTime, out _))
-            .WithMessage("Event time must be a valid date-time string.")
-            .Must((command, eventTime) =>
-                EventParsing.TryParseEventTime(eventTime, out var parsedEventTime)
-                && parsedEventTime >= timeProvider.GetUtcNow())
-            .WithMessage("Event time must be now or in the future.");
+            .Must((command, eventDate) => EventParsing.TryParseEventDate(eventDate, out _))
+            .WithMessage("Event date must be a valid date string.")
+            .Must((command, eventDate) =>
+                EventParsing.TryParseEventDate(eventDate, out var parsedEventDate)
+                && parsedEventDate >= DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime))
+            .WithMessage("Event date must be today or in the future.");
 
         RuleFor(command => command.ConcurrencyToken)
             .Cascade(CascadeMode.Stop)

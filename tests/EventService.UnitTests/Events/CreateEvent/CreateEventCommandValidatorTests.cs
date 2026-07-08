@@ -13,7 +13,7 @@ public sealed class CreateEventCommandValidatorTests
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Birthday party",
-            _now.AddHours(1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             "birthday",
             null);
 
@@ -35,19 +35,34 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEventTimeIsInPast_Fails()
+    public async Task Validate_WhenEventDateIsInThePast_Fails()
     {
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Wedding plan",
-            _now.AddSeconds(-1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(-1).ToString("yyyy-MM-dd"),
             "wedding",
             null);
 
         var result = await validator.ValidateAsync(command);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventTime));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventDate));
+    }
+
+    [Fact]
+    public async Task Validate_WhenEventDateIsToday_Passes()
+    {
+        var validator = CreateValidator();
+        var command = new CreateEventCommand(
+            "Wedding plan",
+            DateOnly.FromDateTime(_now.DateTime).ToString("yyyy-MM-dd"),
+            "wedding",
+            null);
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.True(result.IsValid);
     }
 
     [Fact]
@@ -63,7 +78,7 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEventTimeIsInvalid_Fails()
+    public async Task Validate_WhenEventDateIsInvalid_Fails()
     {
         var validator = CreateValidator();
         var command = new CreateEventCommand("Launch plan", "not-a-date", "event", null);
@@ -71,7 +86,7 @@ public sealed class CreateEventCommandValidatorTests
         var result = await validator.ValidateAsync(command);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventTime));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(CreateEventCommand.EventDate));
     }
 
     [Fact]
@@ -98,7 +113,7 @@ public sealed class CreateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEventTimeIsOmitted_Passes()
+    public async Task Validate_WhenEventDateIsOmitted_Passes()
     {
         var validator = CreateValidator();
         var command = new CreateEventCommand("Launch plan", null, "event", null);
@@ -218,11 +233,11 @@ public sealed class CreateEventCommandValidatorTests
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Dinner party",
-            _now.AddHours(1).ToString("O"),
+            _now.ToString("yyyy-MM-dd"),
             "dinner",
             null,
-            EventStartTime: _now.AddHours(1).ToString("O"),
-            EventEndTime: _now.AddHours(4).ToString("O"));
+            EventStartTime: "14:00",
+            EventEndTime: "18:00");
 
         var result = await validator.ValidateAsync(command);
 
@@ -235,10 +250,10 @@ public sealed class CreateEventCommandValidatorTests
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Dinner party",
-            _now.AddHours(1).ToString("O"),
+            _now.ToString("yyyy-MM-dd"),
             "dinner",
             null,
-            EventStartTime: "not-a-date");
+            EventStartTime: "not-a-time");
 
         var result = await validator.ValidateAsync(command);
 
@@ -252,10 +267,10 @@ public sealed class CreateEventCommandValidatorTests
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Dinner party",
-            _now.AddHours(1).ToString("O"),
+            _now.ToString("yyyy-MM-dd"),
             "dinner",
             null,
-            EventEndTime: "not-a-date");
+            EventEndTime: "not-a-time");
 
         var result = await validator.ValidateAsync(command);
 
@@ -269,11 +284,11 @@ public sealed class CreateEventCommandValidatorTests
         var validator = CreateValidator();
         var command = new CreateEventCommand(
             "Dinner party",
-            _now.AddHours(1).ToString("O"),
+            _now.ToString("yyyy-MM-dd"),
             "dinner",
             null,
-            EventStartTime: _now.AddHours(4).ToString("O"),
-            EventEndTime: _now.AddHours(2).ToString("O"));
+            EventStartTime: "18:00",
+            EventEndTime: "14:00");
 
         var result = await validator.ValidateAsync(command);
 
@@ -285,7 +300,7 @@ public sealed class CreateEventCommandValidatorTests
     public async Task Validate_WhenStartAndEndTimeOmitted_Passes()
     {
         var validator = CreateValidator();
-        var command = new CreateEventCommand("Dinner party", _now.AddHours(1).ToString("O"), "dinner", null);
+        var command = new CreateEventCommand("Dinner party", _now.ToString("yyyy-MM-dd"), "dinner", null);
 
         var result = await validator.ValidateAsync(command);
 

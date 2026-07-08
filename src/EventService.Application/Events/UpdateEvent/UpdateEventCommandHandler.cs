@@ -31,12 +31,12 @@ public sealed class UpdateEventCommandHandler(
         }
 
         var now = timeProvider.GetUtcNow();
-        var eventTime = ResolveEventTime(request.EventTime);
+        var eventDate = ResolveEventDate(request.EventDate);
         var expectedConcurrencyToken = Convert.FromBase64String(request.ConcurrencyToken);
 
         plannedEvent.UpdateDetails(
             request.EventName,
-            eventTime,
+            eventDate,
             request.EventDescription,
             now);
 
@@ -55,18 +55,18 @@ public sealed class UpdateEventCommandHandler(
             return UpdateEventResult.Conflict();
         }
 
-        logger.LogInformation("Event updated. EventId: {EventId}. EventTime: {EventTime}.", plannedEvent.Id, plannedEvent.EventTime);
+        logger.LogInformation("Event updated. EventId: {EventId}. EventDate: {EventDate}.", plannedEvent.Id, plannedEvent.EventDate);
 
         return UpdateEventResult.Updated(EventDetails.From(plannedEvent));
     }
 
-    private static DateTimeOffset ResolveEventTime(string value)
+    private static DateOnly ResolveEventDate(string value)
     {
-        if (EventParsing.TryParseEventTime(value, out var eventTime))
+        if (EventParsing.TryParseEventDate(value, out var eventDate))
         {
-            return eventTime;
+            return eventDate;
         }
 
-        throw new ArgumentException("Event time must be a valid date-time string.", nameof(value));
+        throw new ArgumentException("Event date must be a valid date string.", nameof(value));
     }
 }

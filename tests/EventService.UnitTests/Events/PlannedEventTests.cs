@@ -9,20 +9,20 @@ public sealed class PlannedEventTests
     {
         var eventId = Guid.NewGuid();
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var eventTime = now.AddDays(1);
+        var eventDate = DateOnly.FromDateTime(now.DateTime).AddDays(1);
 
         var plannedEvent = PlannedEvent.Create(
             eventId,
             Guid.NewGuid(),
             " Product launch ",
-            eventTime,
+            eventDate,
             EventType.Event,
             " Launch details ",
             now);
 
         Assert.Equal(eventId, plannedEvent.Id);
         Assert.Equal("Product launch", plannedEvent.Name);
-        Assert.Equal(eventTime, plannedEvent.EventTime);
+        Assert.Equal(eventDate, plannedEvent.EventDate);
         Assert.Equal(EventType.Event, plannedEvent.Type);
         Assert.Equal("Launch details", plannedEvent.Description);
         Assert.False(plannedEvent.IsDeleted);
@@ -36,26 +36,27 @@ public sealed class PlannedEventTests
     public void UpdateDetails_UpdatesEditableFieldsAndConcurrencyToken()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            eventDate.AddDays(1),
             EventType.Event,
             "Old details",
             now);
         var originalToken = plannedEvent.ConcurrencyToken;
         var updatedAt = now.AddMinutes(5);
-        var newEventTime = now.AddDays(2);
+        var newEventDate = eventDate.AddDays(2);
 
         plannedEvent.UpdateDetails(
             " Updated launch ",
-            newEventTime,
+            newEventDate,
             " Updated details ",
             updatedAt);
 
         Assert.Equal("Updated launch", plannedEvent.Name);
-        Assert.Equal(newEventTime, plannedEvent.EventTime);
+        Assert.Equal(newEventDate, plannedEvent.EventDate);
         Assert.Equal("Updated details", plannedEvent.Description);
         Assert.Equal(updatedAt, plannedEvent.UpdatedAt);
         Assert.Equal(EventType.Event, plannedEvent.Type);
@@ -68,16 +69,17 @@ public sealed class PlannedEventTests
     public void UpdateDetails_WhenDescriptionIsBlank_StoresNull()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            eventDate.AddDays(1),
             EventType.Event,
             "Old details",
             now);
 
-        plannedEvent.UpdateDetails("Launch plan", now.AddDays(2), "  ", now.AddMinutes(5));
+        plannedEvent.UpdateDetails("Launch plan", eventDate.AddDays(2), "  ", now.AddMinutes(5));
 
         Assert.Null(plannedEvent.Description);
     }
@@ -86,18 +88,19 @@ public sealed class PlannedEventTests
     public void UpdateDetails_WhenNameIsBlank_Throws()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            eventDate.AddDays(1),
             EventType.Event,
             null,
             now);
 
         var exception = Assert.Throws<ArgumentException>(() => plannedEvent.UpdateDetails(
             "  ",
-            now.AddDays(2),
+            eventDate.AddDays(2),
             null,
             now.AddMinutes(5)));
 
@@ -112,7 +115,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Wedding plan",
-            now.AddDays(10),
+            DateOnly.FromDateTime(now.DateTime).AddDays(10),
             EventType.Wedding,
             null,
             now);
@@ -145,7 +148,7 @@ public sealed class PlannedEventTests
             Guid.Empty,
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now));
@@ -162,7 +165,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "  ",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now));
@@ -183,7 +186,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Mateo turns five",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Birthday,
             null,
             now,
@@ -206,7 +209,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Launch,
             null,
             now);
@@ -219,9 +222,9 @@ public sealed class PlannedEventTests
     public void Create_WithStartAndEndTime_StoresBothInUtc()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var anchor = now.AddDays(1);
-        var start = anchor.AddHours(2);
-        var end = anchor.AddHours(6);
+        var anchor = DateOnly.FromDateTime(now.DateTime).AddDays(1);
+        var start = new TimeOnly(2, 0);
+        var end = new TimeOnly(6, 0);
 
         var plannedEvent = PlannedEvent.Create(
             Guid.NewGuid(),
@@ -249,7 +252,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Dinner party",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Dinner,
             null,
             now);
@@ -262,8 +265,8 @@ public sealed class PlannedEventTests
     public void Create_WhenEndTimeBeforeStartTime_Throws()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var anchor = now.AddDays(1);
-        var start = anchor.AddHours(4);
+        var anchor = DateOnly.FromDateTime(now.DateTime).AddDays(1);
+        var start = new TimeOnly(4, 0);
 
         var exception = Assert.Throws<ArgumentException>(() => PlannedEvent.Create(
             Guid.NewGuid(),
@@ -290,7 +293,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Dinner,
             null,
             now,
@@ -309,7 +312,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             "  ",
             now);
@@ -325,7 +328,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now);
@@ -349,7 +352,7 @@ public sealed class PlannedEventTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Launch plan",
-            now.AddDays(1),
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
             EventType.Event,
             null,
             now);
