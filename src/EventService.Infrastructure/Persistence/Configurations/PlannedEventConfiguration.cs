@@ -26,8 +26,8 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(plannedEvent => plannedEvent.EventTime)
-            .HasColumnName("event_time")
+        builder.Property(plannedEvent => plannedEvent.EventDate)
+            .HasColumnName("event_date")
             .IsRequired();
 
         builder.Property(plannedEvent => plannedEvent.EventStartTime)
@@ -86,10 +86,10 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
             .IsConcurrencyToken()
             .IsRequired();
 
-        builder.HasIndex(plannedEvent => new { plannedEvent.IsDeleted, plannedEvent.EventTime })
-            .HasDatabaseName("ix_events_is_deleted_event_time");
+        builder.HasIndex(plannedEvent => new { plannedEvent.IsDeleted, plannedEvent.EventDate })
+            .HasDatabaseName("ix_events_is_deleted_event_date");
 
-        builder.HasIndex(plannedEvent => new { plannedEvent.TenantId, plannedEvent.IsDeleted, plannedEvent.EventTime })
-            .HasDatabaseName("ix_events_tenant_id_is_deleted_event_time");
+        builder.HasIndex(plannedEvent => new { plannedEvent.TenantId, plannedEvent.IsDeleted, plannedEvent.EventDate })
+            .HasDatabaseName("ix_events_tenant_id_is_deleted_event_date");
     }
 }

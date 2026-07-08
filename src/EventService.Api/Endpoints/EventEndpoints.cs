@@ -63,7 +63,7 @@ internal static class EventEndpoints
                     .Select(item => new EventSummaryResponse(
                         item.Id,
                         item.EventName,
-                        item.EventTime,
+                        item.EventDate,
                         item.EventType,
                         item.EventDescription,
                         item.CreatedAt,
@@ -110,7 +110,7 @@ internal static class EventEndpoints
         var response = new GetEventDetailsResponse(
             result.Event.Id,
             result.Event.EventName,
-            result.Event.EventTime,
+            result.Event.EventDate,
             result.Event.EventType,
             result.Event.EventDescription,
             result.Event.CreatedAt,
@@ -131,7 +131,7 @@ internal static class EventEndpoints
             var result = await sender.Send(
                 new CreateEventCommand(
                     request.EventName,
-                    request.EventTime,
+                    request.EventDate,
                     request.EventType,
                     request.EventDescription),
                 cancellationToken);
@@ -139,7 +139,7 @@ internal static class EventEndpoints
             var response = new CreateEventResponse(
                 result.Event.Id,
                 result.Event.EventName,
-                result.Event.EventTime,
+                result.Event.EventDate,
                 result.Event.EventType,
                 result.Event.EventDescription,
                 result.Event.CreatedAt,
@@ -167,7 +167,7 @@ internal static class EventEndpoints
                 new UpdateEventCommand(
                     id,
                     request.EventName,
-                    request.EventTime,
+                    request.EventDate,
                     request.EventDescription,
                     request.ConcurrencyToken),
                 cancellationToken);
@@ -177,7 +177,7 @@ internal static class EventEndpoints
                 UpdateEventStatus.Updated when result.Event is not null => Results.Ok(new UpdateEventResponse(
                     result.Event.Id,
                     result.Event.EventName,
-                    result.Event.EventTime,
+                    result.Event.EventDate,
                     result.Event.EventType,
                     result.Event.EventDescription,
                     result.Event.CreatedAt,

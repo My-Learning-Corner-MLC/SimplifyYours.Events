@@ -29,14 +29,14 @@ public sealed class QueryEventsContractTests
     public void EventSummaryResponse_ExposesResponseValues()
     {
         var id = Guid.NewGuid();
-        var eventTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
-        var createdAt = eventTime.AddDays(-10);
-        var updatedAt = eventTime.AddDays(-2);
+        var eventDate = new DateOnly(2026, 6, 1);
+        var createdAt = new DateTimeOffset(2026, 5, 22, 9, 0, 0, TimeSpan.Zero);
+        var updatedAt = new DateTimeOffset(2026, 5, 30, 9, 0, 0, TimeSpan.Zero);
 
         var response = new EventSummaryResponse(
             id,
             "Product launch",
-            eventTime,
+            eventDate,
             "event",
             "Launch details",
             createdAt,
@@ -44,7 +44,7 @@ public sealed class QueryEventsContractTests
 
         Assert.Equal(id, response.Id);
         Assert.Equal("Product launch", response.EventName);
-        Assert.Equal(eventTime, response.EventTime);
+        Assert.Equal(eventDate, response.EventDate);
         Assert.Equal("event", response.EventType);
         Assert.Equal("Launch details", response.EventDescription);
         Assert.Equal(createdAt, response.CreatedAt);
@@ -57,7 +57,7 @@ public sealed class QueryEventsContractTests
         var item = new EventSummaryResponse(
             Guid.NewGuid(),
             "Product launch",
-            new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            new DateOnly(2026, 6, 1),
             "event",
             null,
             new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero),
@@ -87,7 +87,7 @@ public sealed class QueryEventsContractTests
         var response = new EventSummaryResponse(
             Guid.NewGuid(),
             "Product launch",
-            new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            new DateOnly(2026, 6, 1),
             "event",
             null,
             new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero),
@@ -101,18 +101,19 @@ public sealed class QueryEventsContractTests
     [Fact]
     public void EventSummaryResponse_ExposesLocationAndSchedule()
     {
-        var startTime = new DateTimeOffset(2026, 7, 5, 14, 0, 0, TimeSpan.Zero);
-        var endTime = new DateTimeOffset(2026, 7, 5, 18, 0, 0, TimeSpan.Zero);
+        var eventDate = new DateOnly(2026, 7, 5);
+        var startTime = new TimeOnly(14, 0);
+        var endTime = new TimeOnly(18, 0);
         var location = new EventLocationDto("The Backyard", "414 Maple Street", "Side gate unlocked");
 
         var response = new EventSummaryResponse(
             Guid.NewGuid(),
             "Mateo turns five",
-            startTime,
+            eventDate,
             "birthday",
             "Backyard party",
-            startTime.AddDays(-10),
-            startTime.AddDays(-2),
+            new DateTimeOffset(2026, 6, 25, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 7, 3, 9, 0, 0, TimeSpan.Zero),
             location,
             startTime,
             endTime);

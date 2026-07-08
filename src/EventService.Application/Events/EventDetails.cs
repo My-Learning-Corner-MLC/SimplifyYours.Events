@@ -5,7 +5,7 @@ namespace EventService.Application.Events;
 public sealed record EventDetails(
     Guid Id,
     string EventName,
-    DateTimeOffset EventTime,
+    DateOnly EventDate,
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,
@@ -13,15 +13,15 @@ public sealed record EventDetails(
     string ConcurrencyToken,
     EventLocationDetails? Location = null,
     string? TimeZoneId = null,
-    DateTimeOffset? EventStartTime = null,
-    DateTimeOffset? EventEndTime = null)
+    TimeOnly? EventStartTime = null,
+    TimeOnly? EventEndTime = null)
 {
     internal static EventDetails From(PlannedEvent plannedEvent)
     {
         return new EventDetails(
             plannedEvent.Id,
             plannedEvent.Name,
-            plannedEvent.EventTime,
+            plannedEvent.EventDate,
             plannedEvent.Type.ToString().ToLowerInvariant(),
             plannedEvent.Description,
             plannedEvent.CreatedAt,

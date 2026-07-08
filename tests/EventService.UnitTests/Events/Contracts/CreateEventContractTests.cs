@@ -9,12 +9,12 @@ public sealed class CreateEventContractTests
     {
         var request = new CreateEventRequest(
             "Launch plan",
-            "2026-05-16T10:00:00Z",
+            "2026-05-16",
             "event",
             "Details");
 
         Assert.Equal("Launch plan", request.EventName);
-        Assert.Equal("2026-05-16T10:00:00Z", request.EventTime);
+        Assert.Equal("2026-05-16", request.EventDate);
         Assert.Equal("event", request.EventType);
         Assert.Equal("Details", request.EventDescription);
     }
@@ -23,14 +23,14 @@ public sealed class CreateEventContractTests
     public void CreateEventResponse_ExposesResponseValues()
     {
         var id = Guid.NewGuid();
-        var eventTime = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var createdAt = eventTime.AddMinutes(-5);
-        var updatedAt = eventTime.AddMinutes(-4);
+        var eventDate = new DateOnly(2026, 5, 16);
+        var createdAt = new DateTimeOffset(2026, 5, 16, 9, 55, 0, TimeSpan.Zero);
+        var updatedAt = createdAt.AddMinutes(1);
 
         var response = new CreateEventResponse(
             id,
             "Launch plan",
-            eventTime,
+            eventDate,
             "event",
             "Details",
             createdAt,
@@ -39,7 +39,7 @@ public sealed class CreateEventContractTests
 
         Assert.Equal(id, response.Id);
         Assert.Equal("Launch plan", response.EventName);
-        Assert.Equal(eventTime, response.EventTime);
+        Assert.Equal(eventDate, response.EventDate);
         Assert.Equal("event", response.EventType);
         Assert.Equal("Details", response.EventDescription);
         Assert.Equal(createdAt, response.CreatedAt);
@@ -52,12 +52,12 @@ public sealed class CreateEventContractTests
     {
         var request = new UpdateEventRequest(
             "Launch plan",
-            "2026-05-16T10:00:00Z",
+            "2026-05-16",
             "Details",
             "token");
 
         Assert.Equal("Launch plan", request.EventName);
-        Assert.Equal("2026-05-16T10:00:00Z", request.EventTime);
+        Assert.Equal("2026-05-16", request.EventDate);
         Assert.Equal("Details", request.EventDescription);
         Assert.Equal("token", request.ConcurrencyToken);
     }
@@ -66,14 +66,14 @@ public sealed class CreateEventContractTests
     public void UpdateEventResponse_ExposesResponseValues()
     {
         var id = Guid.NewGuid();
-        var eventTime = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var createdAt = eventTime.AddMinutes(-5);
-        var updatedAt = eventTime.AddMinutes(-4);
+        var eventDate = new DateOnly(2026, 5, 16);
+        var createdAt = new DateTimeOffset(2026, 5, 16, 9, 55, 0, TimeSpan.Zero);
+        var updatedAt = createdAt.AddMinutes(1);
 
         var response = new UpdateEventResponse(
             id,
             "Launch plan",
-            eventTime,
+            eventDate,
             "event",
             "Details",
             createdAt,
@@ -82,7 +82,7 @@ public sealed class CreateEventContractTests
 
         Assert.Equal(id, response.Id);
         Assert.Equal("Launch plan", response.EventName);
-        Assert.Equal(eventTime, response.EventTime);
+        Assert.Equal(eventDate, response.EventDate);
         Assert.Equal("event", response.EventType);
         Assert.Equal("Details", response.EventDescription);
         Assert.Equal(createdAt, response.CreatedAt);
@@ -94,14 +94,14 @@ public sealed class CreateEventContractTests
     public void GetEventDetailsResponse_ExposesResponseValues()
     {
         var id = Guid.NewGuid();
-        var eventTime = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
-        var createdAt = eventTime.AddMinutes(-5);
-        var updatedAt = eventTime.AddMinutes(-4);
+        var eventDate = new DateOnly(2026, 5, 16);
+        var createdAt = new DateTimeOffset(2026, 5, 16, 9, 55, 0, TimeSpan.Zero);
+        var updatedAt = createdAt.AddMinutes(1);
 
         var response = new GetEventDetailsResponse(
             id,
             "Launch plan",
-            eventTime,
+            eventDate,
             "event",
             "Details",
             createdAt,
@@ -110,7 +110,7 @@ public sealed class CreateEventContractTests
 
         Assert.Equal(id, response.Id);
         Assert.Equal("Launch plan", response.EventName);
-        Assert.Equal(eventTime, response.EventTime);
+        Assert.Equal(eventDate, response.EventDate);
         Assert.Equal("event", response.EventType);
         Assert.Equal("Details", response.EventDescription);
         Assert.Equal(createdAt, response.CreatedAt);

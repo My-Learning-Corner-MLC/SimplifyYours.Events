@@ -3,11 +3,11 @@ namespace EventService.Application.Events.GetEventList;
 public sealed record EventSummaryResult(
     Guid Id,
     string EventName,
-    DateTimeOffset EventTime,
+    DateOnly EventDate,
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     EventLocationDetails? Location = null,
-    DateTimeOffset? EventStartTime = null,
-    DateTimeOffset? EventEndTime = null);
+    TimeOnly? EventStartTime = null,
+    TimeOnly? EventEndTime = null);

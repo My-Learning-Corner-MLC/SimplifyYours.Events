@@ -13,16 +13,16 @@ public partial class AddEventStartAndEndTime : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.AddColumn<DateTimeOffset>(
+        migrationBuilder.AddColumn<TimeOnly>(
             name: "event_start_time",
             table: "events",
-            type: "timestamp with time zone",
+            type: "time without time zone",
             nullable: true);
 
-        migrationBuilder.AddColumn<DateTimeOffset>(
+        migrationBuilder.AddColumn<TimeOnly>(
             name: "event_end_time",
             table: "events",
-            type: "timestamp with time zone",
+            type: "time without time zone",
             nullable: true);
     }
 

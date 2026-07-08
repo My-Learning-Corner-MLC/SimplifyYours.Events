@@ -3,7 +3,7 @@ namespace EventService.Contracts.Events;
 public sealed record UpdateEventResponse(
     Guid Id,
     string EventName,
-    DateTimeOffset EventTime,
+    DateOnly EventDate,
     string EventType,
     string? EventDescription,
     DateTimeOffset CreatedAt,

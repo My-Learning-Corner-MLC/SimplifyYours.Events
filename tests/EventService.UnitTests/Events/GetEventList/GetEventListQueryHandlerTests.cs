@@ -77,11 +77,12 @@ public sealed class GetEventListQueryHandlerTests
     public async Task Handle_MapsRepositoryPageToResult()
     {
         var createdAt = _now.AddDays(-1);
+        var eventDate = DateOnly.FromDateTime(_now.DateTime).AddDays(7);
         var plannedEvent = PlannedEvent.Create(
             Guid.Parse("30f4b3ce-b989-4d6b-9ea2-909d4118a45d"),
             Guid.NewGuid(),
             "Product launch",
-            _now.AddDays(7),
+            eventDate,
             EventType.Event,
             "Launch details",
             createdAt);
@@ -98,7 +99,7 @@ public sealed class GetEventListQueryHandlerTests
         var item = Assert.Single(result.Items);
         Assert.Equal(plannedEvent.Id, item.Id);
         Assert.Equal("Product launch", item.EventName);
-        Assert.Equal(plannedEvent.EventTime, item.EventTime);
+        Assert.Equal(plannedEvent.EventDate, item.EventDate);
         Assert.Equal("event", item.EventType);
         Assert.Equal("Launch details", item.EventDescription);
         Assert.Equal(createdAt, item.CreatedAt);
@@ -118,14 +119,15 @@ public sealed class GetEventListQueryHandlerTests
     public async Task Handle_MapsLocationAndScheduleWhenPresent()
     {
         var createdAt = _now.AddDays(-1);
-        var startTime = _now.AddDays(7);
+        var eventDate = DateOnly.FromDateTime(_now.DateTime).AddDays(7);
+        var startTime = new TimeOnly(14, 0);
         var endTime = startTime.AddHours(4);
         var location = EventLocation.Create("The Backyard", "414 Maple Street", "Side gate unlocked");
         var plannedEvent = PlannedEvent.Create(
             Guid.Parse("6c2f0a9d-1b7e-4c2a-9f4a-2d5b6e7c8a90"),
             Guid.NewGuid(),
             "Mateo turns five",
-            startTime,
+            eventDate,
             EventType.Birthday,
             "Backyard party",
             createdAt,

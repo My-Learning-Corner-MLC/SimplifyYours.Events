@@ -15,7 +15,7 @@ public sealed class UpdateEventCommandValidatorTests
         var command = new UpdateEventCommand(
             Guid.NewGuid(),
             "Birthday party",
-            _now.AddHours(1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             null,
             _token);
 
@@ -31,7 +31,7 @@ public sealed class UpdateEventCommandValidatorTests
         var command = new UpdateEventCommand(
             Guid.Empty,
             "Birthday party",
-            _now.AddHours(1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             null,
             _token);
 
@@ -48,7 +48,7 @@ public sealed class UpdateEventCommandValidatorTests
         var command = new UpdateEventCommand(
             Guid.NewGuid(),
             "ab",
-            _now.AddHours(1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             null,
             _token);
 
@@ -65,7 +65,7 @@ public sealed class UpdateEventCommandValidatorTests
         var command = new UpdateEventCommand(
             Guid.NewGuid(),
             "Launch plan",
-            _now.AddHours(1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             new string('a', 5001),
             _token);
 
@@ -76,7 +76,7 @@ public sealed class UpdateEventCommandValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEventTimeIsInvalid_Fails()
+    public async Task Validate_WhenEventDateIsInvalid_Fails()
     {
         var validator = CreateValidator();
         var command = new UpdateEventCommand(
@@ -89,24 +89,40 @@ public sealed class UpdateEventCommandValidatorTests
         var result = await validator.ValidateAsync(command);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventTime));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventDate));
     }
 
     [Fact]
-    public async Task Validate_WhenEventTimeIsInPast_Fails()
+    public async Task Validate_WhenEventDateIsInThePast_Fails()
     {
         var validator = CreateValidator();
         var command = new UpdateEventCommand(
             Guid.NewGuid(),
             "Launch plan",
-            _now.AddSeconds(-1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(-1).ToString("yyyy-MM-dd"),
             null,
             _token);
 
         var result = await validator.ValidateAsync(command);
 
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventTime));
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventDate));
+    }
+
+    [Fact]
+    public async Task Validate_WhenEventDateIsToday_Passes()
+    {
+        var validator = CreateValidator();
+        var command = new UpdateEventCommand(
+            Guid.NewGuid(),
+            "Launch plan",
+            DateOnly.FromDateTime(_now.DateTime).ToString("yyyy-MM-dd"),
+            null,
+            _token);
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.True(result.IsValid);
     }
 
     [Fact]
@@ -116,7 +132,7 @@ public sealed class UpdateEventCommandValidatorTests
         var command = new UpdateEventCommand(
             Guid.NewGuid(),
             "Launch plan",
-            _now.AddHours(1).ToString("O"),
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             null,
             "not-base64");
 
