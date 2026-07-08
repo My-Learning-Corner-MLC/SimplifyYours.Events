@@ -24,9 +24,9 @@ Request body:
 ```json
 {
   "eventName": "Mateo turns five",
-  "eventTime": "2026-08-17T14:00:00Z",
-  "eventStartTime": "2026-08-17T14:00:00Z",
-  "eventEndTime": "2026-08-17T18:00:00Z",
+  "eventDate": "2026-08-17",
+  "eventStartTime": "14:00",
+  "eventEndTime": "18:00",
   "eventType": "birthday",
   "eventDescription": "Backyard birthday party",
   "timeZoneId": "America/Los_Angeles",
@@ -41,13 +41,13 @@ Request body:
 `eventStartTime`, `eventEndTime`, `timeZoneId`, and `location` (and every field
 inside `location`) are optional; a minimal body with only `eventName` and
 `eventType` still returns `201`, which supports the "create now, finish later"
-flow. `eventTime` is the canonical schedule anchor (defaults to now when
-omitted); `eventStartTime` and `eventEndTime` capture an optional precise window.
-When present, `eventEndTime` must be a valid date-time at or after the start
-(`eventStartTime` if given, otherwise `eventTime`). A `location` whose fields are
-all blank is normalized to no location. Field caps: `venueName` ≤ 200,
-`address` ≤ 500, `notes` ≤ 2000, `timeZoneId` a valid IANA id (≤ 64). There is no
-online-link field.
+flow. `eventDate` is the calendar day the event happens on (defaults to today
+when omitted); `eventStartTime` and `eventEndTime` are wall-clock time-of-day
+values (`HH:mm`) with no timezone conversion applied, capturing an optional
+precise window. When present, `eventEndTime` must be at or after
+`eventStartTime`. A `location` whose fields are all blank is normalized to no
+location. Field caps: `venueName` ≤ 200, `address` ≤ 500, `notes` ≤ 2000,
+`timeZoneId` a valid IANA id (≤ 64). There is no online-link field.
 
 Responses:
 
@@ -84,7 +84,7 @@ Response body:
 {
   "id": "00000000-0000-0000-0000-000000000000",
   "eventName": "Product launch",
-  "eventTime": "2026-06-01T10:00:00+00:00",
+  "eventDate": "2026-06-01",
   "eventType": "event",
   "eventDescription": "Launch plan",
   "createdAt": "2026-05-17T10:00:00+00:00",
@@ -135,7 +135,7 @@ Response body:
     {
       "id": "00000000-0000-0000-0000-000000000000",
       "eventName": "Product launch",
-      "eventTime": "2026-06-01T10:00:00+00:00",
+      "eventDate": "2026-06-01",
       "eventType": "event",
       "eventDescription": "Launch plan",
       "createdAt": "2026-05-17T10:00:00+00:00",
@@ -162,7 +162,7 @@ Request body:
 ```json
 {
   "eventName": "Updated product launch",
-  "eventTime": "2026-06-01T11:00:00Z",
+  "eventDate": "2026-06-01",
   "eventDescription": "Updated launch plan",
   "concurrencyToken": "AAAAAAAAAAAAAAAAAAAAAA=="
 }
@@ -183,7 +183,7 @@ Response body:
 {
   "id": "00000000-0000-0000-0000-000000000000",
   "eventName": "Updated product launch",
-  "eventTime": "2026-06-01T11:00:00+00:00",
+  "eventDate": "2026-06-01",
   "eventType": "event",
   "eventDescription": "Updated launch plan",
   "createdAt": "2026-05-17T10:00:00+00:00",
