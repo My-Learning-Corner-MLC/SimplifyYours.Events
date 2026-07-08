@@ -10,7 +10,8 @@ internal sealed class PlannedEventConfiguration : IEntityTypeConfiguration<Plann
     {
         builder.ToTable("events");
 
-        builder.HasKey(plannedEvent => plannedEvent.Id);
+        builder.HasKey(plannedEvent => plannedEvent.Id)
+            .HasName("pk_events");
 
         builder.Property(plannedEvent => plannedEvent.Id)
             .HasColumnName("id")
