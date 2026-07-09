@@ -92,7 +92,7 @@ internal static class EventEndpoints
         }
     }
 
-    private static async Task<IResult> GetEventDetailsAsync(
+    internal static async Task<IResult> GetEventDetailsAsync(
         Guid eventId,
         HttpContext httpContext,
         ISender sender,
