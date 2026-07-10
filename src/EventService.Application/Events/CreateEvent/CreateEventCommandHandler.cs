@@ -22,8 +22,8 @@ public sealed class CreateEventCommandHandler(
         var currentUser = request.CurrentUser;
         var now = timeProvider.GetUtcNow();
         var eventDate = ResolveEventDate(request.EventDate, now);
-        var eventStartTime = ResolveOptionalTime(request.EventStartTime, "Event start time must be a valid time string.");
-        var eventEndTime = ResolveOptionalTime(request.EventEndTime, "Event end time must be a valid time string.");
+        var eventStartTime = ResolveOptionalTime(request.EventStartTime);
+        var eventEndTime = ResolveOptionalTime(request.EventEndTime);
         var eventType = ResolveEventType(request.EventType);
 
         var plannedEvent = PlannedEvent.Create(
@@ -69,7 +69,7 @@ public sealed class CreateEventCommandHandler(
         throw new ArgumentException("Event date must be a valid date string.", nameof(value));
     }
 
-    private static TimeOnly? ResolveOptionalTime(string? value, string invalidMessage)
+    private static TimeOnly? ResolveOptionalTime(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -81,7 +81,7 @@ public sealed class CreateEventCommandHandler(
             return parsed;
         }
 
-        throw new ArgumentException(invalidMessage, nameof(value));
+        throw new ArgumentException("Event time must be a valid time string.", nameof(value));
     }
 
     private static EventType ResolveEventType(string value)
