@@ -16,6 +16,17 @@ public static class EventParsing
         return DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out eventDate);
     }
 
+    public static bool TryParseEventTime(string? value, out TimeOnly eventTime)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            eventTime = default;
+            return false;
+        }
+
+        return TimeOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out eventTime);
+    }
+
     public static bool TryParseEventType(string? value, out EventType eventType)
     {
         if (string.IsNullOrWhiteSpace(value))

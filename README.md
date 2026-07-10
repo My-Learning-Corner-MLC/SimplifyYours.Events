@@ -15,22 +15,43 @@ Returns a service-up message and the current GMT/UTC date-time.
 
 ### `POST /events`
 
-Creates an event with name, time, type, optional description, audit timestamps, and soft-delete fields.
+Creates an event with name, time, type, optional description, optional start/end
+times, optional time zone, optional structured location, audit timestamps, and
+soft-delete fields.
 
 Request body:
 
 ```json
 {
-  "eventName": "Product launch",
-  "eventTime": "2026-06-01T10:00:00Z",
-  "eventType": "event",
-  "eventDescription": "Launch plan"
+  "eventName": "Mateo turns five",
+  "eventDate": "2026-08-17",
+  "eventStartTime": "14:00",
+  "eventEndTime": "18:00",
+  "eventType": "birthday",
+  "eventDescription": "Backyard birthday party",
+  "timeZoneId": "America/Los_Angeles",
+  "location": {
+    "venueName": "The Backyard",
+    "address": "414 Maple Street, Brooklyn, NY 11215",
+    "notes": "Park on Maple; side gate unlocked from 1:30."
+  }
 }
 ```
 
+`eventStartTime`, `eventEndTime`, `timeZoneId`, and `location` (and every field
+inside `location`) are optional; a minimal body with only `eventName` and
+`eventType` still returns `201`, which supports the "create now, finish later"
+flow. `eventDate` is the calendar day the event happens on (defaults to today
+when omitted); `eventStartTime` and `eventEndTime` are wall-clock time-of-day
+values (`HH:mm`) with no timezone conversion applied, capturing an optional
+precise window. When present, `eventEndTime` must be at or after
+`eventStartTime`. A `location` whose fields are all blank is normalized to no
+location. Field caps: `venueName` ≤ 200, `address` ≤ 500, `notes` ≤ 2000,
+`timeZoneId` a valid IANA id (≤ 64). There is no online-link field.
+
 Responses:
 
-- `201 Created` with the created event details and `Location` value `/events/{id}`.
+- `201 Created` with the created event details (including the echoed, normalized `location` and `timeZoneId`) and `Location` value `/events/{id}`.
 - `401 Unauthorized` when the bearer token is missing or invalid.
 - `400 Bad Request` with validation details when the request is invalid.
 
@@ -39,6 +60,12 @@ Supported event types:
 - `birthday`
 - `wedding`
 - `event`
+- `anniversary`
+- `launch`
+- `dinner`
+- `other`
+
+The `EventCreated` Kafka payload is unchanged (`eventId`, `eventName`, `tenantId`); location and type are not propagated.
 
 ### `GET /events/{eventId}`
 
@@ -57,7 +84,7 @@ Response body:
 {
   "id": "00000000-0000-0000-0000-000000000000",
   "eventName": "Product launch",
-  "eventTime": "2026-06-01T10:00:00+00:00",
+  "eventDate": "2026-06-01",
   "eventType": "event",
   "eventDescription": "Launch plan",
   "createdAt": "2026-05-17T10:00:00+00:00",
@@ -108,7 +135,7 @@ Response body:
     {
       "id": "00000000-0000-0000-0000-000000000000",
       "eventName": "Product launch",
-      "eventTime": "2026-06-01T10:00:00+00:00",
+      "eventDate": "2026-06-01",
       "eventType": "event",
       "eventDescription": "Launch plan",
       "createdAt": "2026-05-17T10:00:00+00:00",
@@ -135,7 +162,7 @@ Request body:
 ```json
 {
   "eventName": "Updated product launch",
-  "eventTime": "2026-06-01T11:00:00Z",
+  "eventDate": "2026-06-01",
   "eventDescription": "Updated launch plan",
   "concurrencyToken": "AAAAAAAAAAAAAAAAAAAAAA=="
 }
@@ -156,7 +183,7 @@ Response body:
 {
   "id": "00000000-0000-0000-0000-000000000000",
   "eventName": "Updated product launch",
-  "eventTime": "2026-06-01T11:00:00+00:00",
+  "eventDate": "2026-06-01",
   "eventType": "event",
   "eventDescription": "Updated launch plan",
   "createdAt": "2026-05-17T10:00:00+00:00",
