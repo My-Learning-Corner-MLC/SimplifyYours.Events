@@ -51,6 +51,50 @@ public sealed class GetEventDetailsQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_MapsLocationAndScheduleWhenPresent()
+    {
+        var eventId = Guid.NewGuid();
+        var createdAt = new DateTimeOffset(2026, 6, 25, 9, 0, 0, TimeSpan.Zero);
+        var eventDate = new DateOnly(2026, 7, 5);
+        var startTime = new TimeOnly(14, 0);
+        var endTime = new TimeOnly(18, 0);
+        var location = EventLocation.Create("The Backyard", "414 Maple Street", "Side gate unlocked");
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
+        var plannedEvent = PlannedEvent.Create(
+            eventId,
+            currentUser.TenantId,
+            "Mateo turns five",
+            eventDate,
+            EventType.Birthday,
+            "Backyard party",
+            createdAt,
+            location,
+            "America/Los_Angeles",
+            startTime,
+            endTime);
+        var repository = new Mock<IEventRepository>();
+        repository
+            .Setup(repo => repo.GetByIdAsync(eventId, currentUser.TenantId, It.IsAny<CancellationToken>(), true))
+            .ReturnsAsync(plannedEvent);
+        var handler = new GetEventDetailsQueryHandler(
+            repository.Object,
+            NullLogger<GetEventDetailsQueryHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GetEventDetailsQuery(eventId) { CurrentUser = currentUser },
+            CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Event.Location);
+        Assert.Equal("The Backyard", result.Event.Location!.VenueName);
+        Assert.Equal("414 Maple Street", result.Event.Location.Address);
+        Assert.Equal("Side gate unlocked", result.Event.Location.Notes);
+        Assert.Equal("America/Los_Angeles", result.Event.TimeZoneId);
+        Assert.Equal(startTime, result.Event.EventStartTime);
+        Assert.Equal(endTime, result.Event.EventEndTime);
+    }
+
+    [Fact]
     public async Task Handle_WhenEventDoesNotExist_ReturnsNull()
     {
         var eventId = Guid.NewGuid();
