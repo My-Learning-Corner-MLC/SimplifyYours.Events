@@ -2,6 +2,12 @@
 
 Backend service for Simplify Yours event capabilities.
 
+## Run in Docker
+
+This service has a `Dockerfile` for containerized local dev, but it's meant to run
+as part of the full stack — see `code/infra/local-dev` for the orchestration
+compose (Postgres, Kafka, all four services, real HTTPS between containers).
+
 ## Current API
 
 Protected event resource endpoints require `Authorization: Bearer <access_token>`.
