@@ -1,20 +1,29 @@
 # syntax=docker/dockerfile:1
 #
-# This service depends on the private SimplifyYours.Event.* packages published to
-# GitHub Packages (see EventService.Infrastructure/EventService.Infrastructure.csproj).
-# Like the rest of this project's local dev setup, package auth is handled via each
-# developer's own local, gitignored NuGet credentials (**/nuget.config is
-# git-ignored repo-wide) rather than baked into the image. Build with:
+# This service depends on SimplifyYours.Event.Publisher/Abstractions from
+# platform-libraries. Rather than resolving them from GitHub Packages (needs a
+# token) or a host NuGet cache bind-mount, this build rebuilds them from source
+# via a named build context pointing at the platform-libraries repo, packs them
+# locally, and restores against that local package source instead. Build with:
 #
-#   docker buildx build --build-context hostnuget=$HOME/.nuget/packages -t <tag> .
+#   docker buildx build --build-context platformlibs-src=../platform-libraries -t <tag> .
 #
-# which bind-mounts your already-authenticated host NuGet cache into the restore
-# step, read-only, so the private packages resolve without embedding any
-# credential in the image or its build history. If this Dockerfile is ever adapted
-# for CI, swap this for an authenticated `dotnet nuget add source` step using a
-# GH_PACKAGES_TOKEN secret instead (a CI runner has no pre-populated host cache).
+# (docker compose's `build.additional_contexts` supplies this automatically --
+# see code/infra/local-dev/docker-compose.yml.) This works identically in CI:
+# a CI runner just needs the platform-libraries repo checked out at that
+# relative path, no GH_PACKAGES_TOKEN required for these specific packages.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS platformlibs
+WORKDIR /libs
+COPY --from=platformlibs-src . .
+# 1.1.0 must match the PackageReference version in EventService.Infrastructure.csproj.
+RUN dotnet pack SimplifyYours.Event.PlatformLibraries.sln -c Release \
+    -p:PackageVersion=1.1.0 -o /packages
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
+
+COPY --from=platformlibs /packages /local-nuget
+RUN dotnet nuget add source /local-nuget --name platform-libs
 
 COPY ["EventService.sln", "./"]
 COPY ["src/EventService.Api/EventService.Api.csproj", "src/EventService.Api/"]
@@ -22,13 +31,11 @@ COPY ["src/EventService.Application/EventService.Application.csproj", "src/Event
 COPY ["src/EventService.Domain/EventService.Domain.csproj", "src/EventService.Domain/"]
 COPY ["src/EventService.Infrastructure/EventService.Infrastructure.csproj", "src/EventService.Infrastructure/"]
 COPY ["src/EventService.Contracts/EventService.Contracts.csproj", "src/EventService.Contracts/"]
-RUN --mount=type=bind,from=hostnuget,target=/root/.nuget/packages,ro \
-    dotnet restore "src/EventService.Api/EventService.Api.csproj"
+RUN dotnet restore "src/EventService.Api/EventService.Api.csproj"
 
 COPY src/ src/
 WORKDIR /src/src/EventService.Api
-RUN --mount=type=bind,from=hostnuget,target=/root/.nuget/packages,ro \
-    dotnet publish "EventService.Api.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "EventService.Api.csproj" -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
