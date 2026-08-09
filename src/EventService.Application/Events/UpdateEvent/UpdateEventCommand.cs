@@ -8,4 +8,11 @@ public sealed record UpdateEventCommand(
     string EventName,
     string EventDate,
     string? EventDescription,
-    string ConcurrencyToken) : BaseCommand, IRequest<UpdateEventResult>;
+    string ConcurrencyToken,
+    UpdateEventLocation? Location = null,
+    string? TimeZoneId = null) : BaseCommand, IRequest<UpdateEventResult>;
+
+public sealed record UpdateEventLocation(
+    string? VenueName,
+    string? Address,
+    string? Notes);

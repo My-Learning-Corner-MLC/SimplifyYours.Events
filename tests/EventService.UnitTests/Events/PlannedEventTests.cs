@@ -108,6 +108,97 @@ public sealed class PlannedEventTests
     }
 
     [Fact]
+    public void UpdateDetails_WithLocationAndTimeZone_ReplacesBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            EventLocation.Create("Old Hall", "1 Old Street", null),
+            "America/Los_Angeles");
+        var newLocation = EventLocation.Create(
+            "The Riverside Room",
+            "20 Riverside Drive",
+            "Parking behind the building.");
+
+        plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5),
+            newLocation,
+            " Europe/Berlin ");
+
+        Assert.NotNull(plannedEvent.Location);
+        Assert.Equal("The Riverside Room", plannedEvent.Location.VenueName);
+        Assert.Equal("20 Riverside Drive", plannedEvent.Location.Address);
+        Assert.Equal("Parking behind the building.", plannedEvent.Location.Notes);
+        Assert.Equal("Europe/Berlin", plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void UpdateDetails_WithoutLocationArguments_LeavesLocationAndTimeZoneUnchanged()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            EventLocation.Create("The Riverside Room", "20 Riverside Drive", null),
+            "America/Los_Angeles");
+
+        plannedEvent.UpdateDetails(
+            "Launch plan renamed",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5));
+
+        Assert.NotNull(plannedEvent.Location);
+        Assert.Equal("The Riverside Room", plannedEvent.Location.VenueName);
+        Assert.Equal("20 Riverside Drive", plannedEvent.Location.Address);
+        Assert.Equal("America/Los_Angeles", plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenLocationIsNullAndTimeZoneIsBlank_ClearsBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            EventLocation.Create("The Riverside Room", "20 Riverside Drive", null),
+            "America/Los_Angeles");
+
+        plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5),
+            location: null,
+            timeZoneId: "  ");
+
+        Assert.Null(plannedEvent.Location);
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
     public void SoftDeleteAndRestore_UpdateRestorableDeleteState()
     {
         var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);

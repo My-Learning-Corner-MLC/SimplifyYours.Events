@@ -2,6 +2,7 @@ using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Events;
 using EventService.Application.IntegrationEvents;
+using EventService.Domain.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -38,7 +39,9 @@ public sealed class UpdateEventCommandHandler(
             request.EventName,
             eventDate,
             request.EventDescription,
-            now);
+            now,
+            ResolveLocation(request.Location, plannedEvent.Location),
+            ResolveTimeZoneId(request.TimeZoneId, plannedEvent.TimeZoneId));
 
         await integrationEventOutbox.AddAsync(
             EventReferenceIntegrationEvents.Updated(plannedEvent, now),
@@ -68,5 +71,23 @@ public sealed class UpdateEventCommandHandler(
         }
 
         throw new ArgumentException("Event date must be a valid date string.", nameof(value));
+    }
+
+    // An omitted location leaves the stored venue untouched so a partial update cannot silently
+    // erase details that already went out on invitations. Sending a location object replaces it.
+    private static EventLocation? ResolveLocation(UpdateEventLocation? location, EventLocation? currentLocation)
+    {
+        return location is null
+            ? currentLocation
+            : EventLocation.Create(
+                location.VenueName,
+                location.Address,
+                location.Notes);
+    }
+
+    // An omitted time zone leaves the stored value untouched; a blank value clears it.
+    private static string? ResolveTimeZoneId(string? timeZoneId, string? currentTimeZoneId)
+    {
+        return timeZoneId is null ? currentTimeZoneId : timeZoneId;
     }
 }

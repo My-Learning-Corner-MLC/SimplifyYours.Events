@@ -128,6 +128,17 @@ public sealed class PlannedEvent
         string? description,
         DateTimeOffset updatedAt)
     {
+        UpdateDetails(name, eventDate, description, updatedAt, Location, TimeZoneId);
+    }
+
+    public void UpdateDetails(
+        string name,
+        DateOnly eventDate,
+        string? description,
+        DateTimeOffset updatedAt,
+        EventLocation? location,
+        string? timeZoneId)
+    {
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
@@ -143,6 +154,8 @@ public sealed class PlannedEvent
         Name = normalizedName;
         EventDate = eventDate;
         Description = NormalizeOptionalText(description);
+        Location = location;
+        TimeZoneId = NormalizeOptionalText(timeZoneId);
         UpdatedAt = updatedAt.ToUniversalTime();
         ConcurrencyToken = CreateConcurrencyToken();
     }

@@ -4,4 +4,6 @@ public sealed record UpdateEventRequest(
     string EventName,
     string EventDate,
     string? EventDescription,
-    string ConcurrencyToken);
+    string ConcurrencyToken,
+    EventLocationDto? Location = null,
+    string? TimeZoneId = null);

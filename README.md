@@ -162,9 +162,11 @@ Response body:
 
 ### `PUT /events/{id}`
 
-Updates an active event's editable details. Only event name, event time, and event description can be changed.
+Updates an active event's editable details: event name, event date, event description, location, and time zone.
 
 Clients must send the latest `concurrencyToken` returned by create, get details, or the previous update response. Stale tokens are rejected to prevent overwriting another update.
+
+`location` and `timeZoneId` are optional. Omitting a field leaves the stored value unchanged, so a client that does not know about them cannot erase a venue that has already gone out on invitations. To clear a stored value, send it explicitly: a `location` object whose fields are all empty clears the location, and an empty `timeZoneId` clears the time zone. Sending a `location` object replaces the stored location as a whole rather than merging field by field.
 
 Request body:
 
@@ -173,7 +175,13 @@ Request body:
   "eventName": "Updated product launch",
   "eventDate": "2026-06-01",
   "eventDescription": "Updated launch plan",
-  "concurrencyToken": "AAAAAAAAAAAAAAAAAAAAAA=="
+  "concurrencyToken": "AAAAAAAAAAAAAAAAAAAAAA==",
+  "location": {
+    "venueName": "The Riverside Room",
+    "address": "20 Riverside Drive",
+    "notes": "Parking behind the building."
+  },
+  "timeZoneId": "Europe/Berlin"
 }
 ```
 
@@ -197,7 +205,13 @@ Response body:
   "eventDescription": "Updated launch plan",
   "createdAt": "2026-05-17T10:00:00+00:00",
   "updatedAt": "2026-05-17T10:15:00+00:00",
-  "concurrencyToken": "BBBBBBBBBBBBBBBBBBBBBB=="
+  "concurrencyToken": "BBBBBBBBBBBBBBBBBBBBBB==",
+  "location": {
+    "venueName": "The Riverside Room",
+    "address": "20 Riverside Drive",
+    "notes": "Parking behind the building."
+  },
+  "timeZoneId": "Europe/Berlin"
 }
 ```
 

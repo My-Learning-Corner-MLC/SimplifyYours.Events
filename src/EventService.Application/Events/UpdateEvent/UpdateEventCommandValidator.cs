@@ -1,4 +1,5 @@
 using EventService.Application.Events;
+using EventService.Domain.Events;
 using FluentValidation;
 
 namespace EventService.Application.Events.UpdateEvent;
@@ -35,6 +36,26 @@ public sealed class UpdateEventCommandValidator : AbstractValidator<UpdateEventC
             .NotEmpty()
             .Must(TryDecodeConcurrencyToken)
             .WithMessage("Concurrency token must be a valid Base64 value.");
+
+        RuleFor(command => command.TimeZoneId)
+            .Must(timeZoneId => string.IsNullOrWhiteSpace(timeZoneId)
+                || TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId.Trim(), out _))
+            .WithMessage("Time zone must be a valid IANA time zone id.");
+
+        When(command => command.Location is not null, () =>
+        {
+            RuleFor(command => command.Location!.VenueName)
+                .MaximumLength(EventLocation.VenueNameMaxLength)
+                .WithMessage($"Venue name must not exceed {EventLocation.VenueNameMaxLength} characters.");
+
+            RuleFor(command => command.Location!.Address)
+                .MaximumLength(EventLocation.AddressMaxLength)
+                .WithMessage($"Address must not exceed {EventLocation.AddressMaxLength} characters.");
+
+            RuleFor(command => command.Location!.Notes)
+                .MaximumLength(EventLocation.NotesMaxLength)
+                .WithMessage($"Location notes must not exceed {EventLocation.NotesMaxLength} characters.");
+        });
     }
 
     private static bool TryDecodeConcurrencyToken(string value)
