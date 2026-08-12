@@ -126,7 +126,11 @@ public sealed class PlannedEvent
         string name,
         DateOnly eventDate,
         string? description,
-        DateTimeOffset updatedAt)
+        DateTimeOffset updatedAt,
+        EventLocation? location,
+        string? timeZoneId,
+        TimeOnly? eventStartTime,
+        TimeOnly? eventEndTime)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -140,9 +144,20 @@ public sealed class PlannedEvent
             throw new ArgumentException("Event name must contain at least 3 characters.", nameof(name));
         }
 
+        if (eventEndTime is not null && eventStartTime is not null && eventEndTime < eventStartTime)
+        {
+            throw new ArgumentException(
+                "Event end time must be at or after the start time.",
+                nameof(eventEndTime));
+        }
+
         Name = normalizedName;
         EventDate = eventDate;
         Description = NormalizeOptionalText(description);
+        Location = location;
+        TimeZoneId = NormalizeOptionalText(timeZoneId);
+        EventStartTime = eventStartTime;
+        EventEndTime = eventEndTime;
         UpdatedAt = updatedAt.ToUniversalTime();
         ConcurrencyToken = CreateConcurrencyToken();
     }

@@ -96,7 +96,7 @@ public sealed class CreateEventCommandHandler(
             nameof(value));
     }
 
-    private static EventLocation? ResolveLocation(CreateEventLocation? location)
+    private static EventLocation? ResolveLocation(EventLocationInput? location)
     {
         return location is null
             ? null

@@ -1,3 +1,4 @@
+using EventService.Application.Events;
 using EventService.Application.Events.CreateEvent;
 using EventService.Application.Events.GetEventDetails;
 using EventService.Application.Events.GetEventList;
@@ -145,7 +146,7 @@ internal static class EventEndpoints
                     request.EventDescription,
                     request.Location is null
                         ? null
-                        : new CreateEventLocation(
+                        : new EventLocationInput(
                             request.Location.VenueName,
                             request.Location.Address,
                             request.Location.Notes),
@@ -196,7 +197,16 @@ internal static class EventEndpoints
                     request.EventName,
                     request.EventDate,
                     request.EventDescription,
-                    request.ConcurrencyToken),
+                    request.ConcurrencyToken,
+                    request.Location is null
+                        ? null
+                        : new EventLocationInput(
+                            request.Location.VenueName,
+                            request.Location.Address,
+                            request.Location.Notes),
+                    request.TimeZoneId,
+                    request.EventStartTime,
+                    request.EventEndTime),
                 cancellationToken);
 
             return result.Status switch
@@ -209,7 +219,16 @@ internal static class EventEndpoints
                     result.Event.EventDescription,
                     result.Event.CreatedAt,
                     result.Event.UpdatedAt,
-                    result.Event.ConcurrencyToken)),
+                    result.Event.ConcurrencyToken,
+                    result.Event.Location is null
+                        ? null
+                        : new EventLocationDto(
+                            result.Event.Location.VenueName,
+                            result.Event.Location.Address,
+                            result.Event.Location.Notes),
+                    result.Event.TimeZoneId,
+                    result.Event.EventStartTime,
+                    result.Event.EventEndTime)),
                 UpdateEventStatus.NotFound => ApiErrorResults.NotFound(
                     "The event was not found. It may have been deleted or the id may be incorrect.",
                     httpContext),

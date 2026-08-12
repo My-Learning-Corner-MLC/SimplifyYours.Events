@@ -53,7 +53,11 @@ public sealed class PlannedEventTests
             " Updated launch ",
             newEventDate,
             " Updated details ",
-            updatedAt);
+            updatedAt,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: null,
+            eventEndTime: null);
 
         Assert.Equal("Updated launch", plannedEvent.Name);
         Assert.Equal(newEventDate, plannedEvent.EventDate);
@@ -79,7 +83,15 @@ public sealed class PlannedEventTests
             "Old details",
             now);
 
-        plannedEvent.UpdateDetails("Launch plan", eventDate.AddDays(2), "  ", now.AddMinutes(5));
+        plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            "  ",
+            now.AddMinutes(5),
+            location: null,
+            timeZoneId: null,
+            eventStartTime: null,
+            eventEndTime: null);
 
         Assert.Null(plannedEvent.Description);
     }
@@ -102,9 +114,139 @@ public sealed class PlannedEventTests
             "  ",
             eventDate.AddDays(2),
             null,
-            now.AddMinutes(5)));
+            now.AddMinutes(5),
+            location: null,
+            timeZoneId: null,
+            eventStartTime: null,
+            eventEndTime: null));
 
         Assert.Equal("name", exception.ParamName);
+    }
+
+    [Fact]
+    public void UpdateDetails_WithLocationAndTimeZone_ReplacesBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            EventLocation.Create("Old Hall", "1 Old Street", null),
+            "America/Los_Angeles");
+        var newLocation = EventLocation.Create(
+            "The Riverside Room",
+            "20 Riverside Drive",
+            "Parking behind the building.");
+
+        plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5),
+            newLocation,
+            " Europe/Berlin ",
+            eventStartTime: null,
+            eventEndTime: null);
+
+        Assert.NotNull(plannedEvent.Location);
+        Assert.Equal("The Riverside Room", plannedEvent.Location.VenueName);
+        Assert.Equal("20 Riverside Drive", plannedEvent.Location.Address);
+        Assert.Equal("Parking behind the building.", plannedEvent.Location.Notes);
+        Assert.Equal("Europe/Berlin", plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenLocationIsNullAndTimeZoneIsBlank_ClearsBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            EventLocation.Create("The Riverside Room", "20 Riverside Drive", null),
+            "America/Los_Angeles");
+
+        plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5),
+            location: null,
+            timeZoneId: "  ",
+            eventStartTime: null,
+            eventEndTime: null);
+
+        Assert.Null(plannedEvent.Location);
+        Assert.Null(plannedEvent.TimeZoneId);
+    }
+
+    [Fact]
+    public void UpdateDetails_WithStartAndEndTime_ReplacesBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: new TimeOnly(2, 0),
+            eventEndTime: new TimeOnly(6, 0));
+
+        plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5),
+            location: null,
+            timeZoneId: null,
+            eventStartTime: new TimeOnly(18, 0),
+            eventEndTime: new TimeOnly(23, 0));
+
+        Assert.Equal(new TimeOnly(18, 0), plannedEvent.EventStartTime);
+        Assert.Equal(new TimeOnly(23, 0), plannedEvent.EventEndTime);
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenEndTimeBeforeStartTime_Throws()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventDate = DateOnly.FromDateTime(now.DateTime);
+        var plannedEvent = PlannedEvent.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Launch plan",
+            eventDate.AddDays(1),
+            EventType.Event,
+            null,
+            now);
+
+        var exception = Assert.Throws<ArgumentException>(() => plannedEvent.UpdateDetails(
+            "Launch plan",
+            eventDate.AddDays(2),
+            null,
+            now.AddMinutes(5),
+            location: null,
+            timeZoneId: null,
+            eventStartTime: new TimeOnly(10, 0),
+            eventEndTime: new TimeOnly(9, 0)));
+
+        Assert.Equal("eventEndTime", exception.ParamName);
     }
 
     [Fact]

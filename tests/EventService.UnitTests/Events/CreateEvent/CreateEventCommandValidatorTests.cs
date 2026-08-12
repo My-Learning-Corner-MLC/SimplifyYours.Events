@@ -1,3 +1,4 @@
+using EventService.Application.Events;
 using EventService.Application.Events.CreateEvent;
 using Moq;
 
@@ -132,7 +133,7 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "birthday",
             null,
-            new CreateEventLocation(
+            new EventLocationInput(
                 "The Backyard",
                 "414 Maple Street, Brooklyn, NY 11215",
                 "Side gate unlocked from 1:30."),
@@ -167,7 +168,7 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "launch",
             null,
-            new CreateEventLocation(new string('v', 201), null, null));
+            new EventLocationInput(new string('v', 201), null, null));
 
         var result = await validator.ValidateAsync(command);
 
@@ -184,7 +185,7 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "launch",
             null,
-            new CreateEventLocation(null, new string('a', 501), null));
+            new EventLocationInput(null, new string('a', 501), null));
 
         var result = await validator.ValidateAsync(command);
 
@@ -201,7 +202,7 @@ public sealed class CreateEventCommandValidatorTests
             null,
             "launch",
             null,
-            new CreateEventLocation(null, null, new string('n', 2001)));
+            new EventLocationInput(null, null, new string('n', 2001)));
 
         var result = await validator.ValidateAsync(command);
 
