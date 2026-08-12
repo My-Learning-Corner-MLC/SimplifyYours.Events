@@ -7,9 +7,7 @@ public sealed record EventReferencePayload(
     string EventType,
     DateOnly? EventDate = null,
     TimeOnly? EventStartTime = null,
-    TimeOnly? EventEndTime = null,
     string? TimeZoneId = null,
-    string? EventDescription = null,
     EventReferenceLocationPayload? Location = null);
 
 public sealed record EventReferenceLocationPayload(

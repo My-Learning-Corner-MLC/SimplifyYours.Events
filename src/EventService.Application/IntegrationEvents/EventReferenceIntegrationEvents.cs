@@ -39,9 +39,7 @@ public static class EventReferenceIntegrationEvents
                 plannedEvent.Type.ToString().ToLowerInvariant(),
                 plannedEvent.EventDate,
                 plannedEvent.EventStartTime,
-                plannedEvent.EventEndTime,
                 plannedEvent.TimeZoneId,
-                plannedEvent.Description,
                 plannedEvent.Location is null
                     ? null
                     : new EventReferenceLocationPayload(
