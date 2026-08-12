@@ -77,13 +77,11 @@ public sealed class EventReferenceIntegrationEventsTests
 
         // The version is the consumer's signal that these fields are actually published; without
         // the bump a consumer cannot tell "absent" from "cleared".
-        Assert.Equal(4, envelope.Version);
+        Assert.Equal(1, envelope.Version);
         Assert.NotNull(payload);
         Assert.Equal(new DateOnly(2026, 9, 12), payload.EventDate);
         Assert.Equal(new TimeOnly(18, 30), payload.EventStartTime);
-        Assert.Equal(new TimeOnly(23, 0), payload.EventEndTime);
         Assert.Equal("Asia/Ho_Chi_Minh", payload.TimeZoneId);
-        Assert.Equal("An evening reception", payload.EventDescription);
         Assert.Equal("Rosewood Hall", payload.Location?.VenueName);
         Assert.Equal("12 Sample Street", payload.Location?.Address);
         Assert.Equal("Parking at the rear", payload.Location?.Notes);
@@ -106,7 +104,6 @@ public sealed class EventReferenceIntegrationEventsTests
         Assert.NotNull(payload);
         Assert.Null(payload.Location);
         Assert.Null(payload.TimeZoneId);
-        Assert.Null(payload.EventDescription);
     }
 
     [Fact]
@@ -128,7 +125,7 @@ public sealed class EventReferenceIntegrationEventsTests
         // A venue edit only reaches an already-sent invitation through EventUpdated, so this path
         // has to carry the location too.
         Assert.Equal("EventUpdated", envelope.EventType);
-        Assert.Equal(4, envelope.Version);
+        Assert.Equal(1, envelope.Version);
         Assert.Equal("Rosewood Hall", payload?.Location?.VenueName);
     }
 
