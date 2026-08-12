@@ -126,15 +126,6 @@ public sealed class PlannedEvent
         string name,
         DateOnly eventDate,
         string? description,
-        DateTimeOffset updatedAt)
-    {
-        UpdateDetails(name, eventDate, description, updatedAt, Location, TimeZoneId);
-    }
-
-    public void UpdateDetails(
-        string name,
-        DateOnly eventDate,
-        string? description,
         DateTimeOffset updatedAt,
         EventLocation? location,
         string? timeZoneId)
