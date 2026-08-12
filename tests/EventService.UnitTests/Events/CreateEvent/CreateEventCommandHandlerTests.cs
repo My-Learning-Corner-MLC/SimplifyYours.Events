@@ -1,3 +1,4 @@
+using EventService.Application.Events;
 using EventService.Application.Abstractions.Common;
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
@@ -96,7 +97,7 @@ public sealed class CreateEventCommandHandlerTests
                 null,
                 "birthday",
                 null,
-                new CreateEventLocation(
+                new EventLocationInput(
                     " The Backyard ",
                     "414 Maple Street, Brooklyn, NY 11215",
                     "Side gate unlocked from 1:30."),
@@ -184,7 +185,7 @@ public sealed class CreateEventCommandHandlerTests
                 null,
                 "dinner",
                 null,
-                new CreateEventLocation("  ", null, "   "),
+                new EventLocationInput("  ", null, "   "),
                 null)
             {
                 CurrentUser = TestUser

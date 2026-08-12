@@ -1,3 +1,4 @@
+using EventService.Application.Events;
 using EventService.Application.Abstractions.Events;
 using EventService.Application.Abstractions.IntegrationEvents;
 using EventService.Application.Authorization;
@@ -120,7 +121,7 @@ public sealed class UpdateEventCommandHandlerTests
                 DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
                 null,
                 Convert.ToBase64String(expectedToken),
-                new UpdateEventLocation(
+                new EventLocationInput(
                     " The Riverside Room ",
                     " 20 Riverside Drive ",
                     " Parking behind the building. "),
@@ -227,7 +228,7 @@ public sealed class UpdateEventCommandHandlerTests
                 DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
                 null,
                 Convert.ToBase64String(expectedToken),
-                new UpdateEventLocation(null, null, "   "),
+                new EventLocationInput(null, null, "   "),
                 "  ")
             {
                 CurrentUser = currentUser
@@ -238,6 +239,151 @@ public sealed class UpdateEventCommandHandlerTests
         Assert.NotNull(result.Event);
         Assert.Null(result.Event.Location);
         Assert.Null(result.Event.TimeZoneId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenStartAndEndTimeProvided_ReplacesThem()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventId = Guid.NewGuid();
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
+        var plannedEvent = PlannedEvent.Create(
+            eventId,
+            currentUser.TenantId,
+            "Launch plan",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: new TimeOnly(2, 0),
+            eventEndTime: new TimeOnly(6, 0));
+        var expectedToken = plannedEvent.ConcurrencyToken;
+        var repository = CreateRepository(eventId, currentUser, plannedEvent, expectedToken, updateResult: true);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new UpdateEventCommand(
+                eventId,
+                "Launch plan",
+                DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
+                null,
+                Convert.ToBase64String(expectedToken),
+                EventStartTime: "18:00",
+                EventEndTime: "23:00")
+            {
+                CurrentUser = currentUser
+            },
+            CancellationToken.None);
+
+        Assert.Equal(UpdateEventStatus.Updated, result.Status);
+        Assert.NotNull(result.Event);
+        Assert.Equal(new TimeOnly(18, 0), result.Event.EventStartTime);
+        Assert.Equal(new TimeOnly(23, 0), result.Event.EventEndTime);
+    }
+
+    [Fact]
+    public async Task Handle_WhenStartAndEndTimeOmitted_LeavesStoredValuesUntouched()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventId = Guid.NewGuid();
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
+        var plannedEvent = PlannedEvent.Create(
+            eventId,
+            currentUser.TenantId,
+            "Launch plan",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: new TimeOnly(18, 0),
+            eventEndTime: new TimeOnly(23, 0));
+        var expectedToken = plannedEvent.ConcurrencyToken;
+        var repository = CreateRepository(eventId, currentUser, plannedEvent, expectedToken, updateResult: true);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new UpdateEventCommand(
+                eventId,
+                "Launch plan renamed",
+                DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
+                null,
+                Convert.ToBase64String(expectedToken))
+            {
+                CurrentUser = currentUser
+            },
+            CancellationToken.None);
+
+        Assert.Equal(UpdateEventStatus.Updated, result.Status);
+        Assert.NotNull(result.Event);
+        Assert.Equal(new TimeOnly(18, 0), result.Event.EventStartTime);
+        Assert.Equal(new TimeOnly(23, 0), result.Event.EventEndTime);
+    }
+
+    [Fact]
+    public async Task Handle_WhenStartAndEndTimeAreBlank_ClearsBoth()
+    {
+        var now = new DateTimeOffset(2026, 5, 16, 10, 0, 0, TimeSpan.Zero);
+        var eventId = Guid.NewGuid();
+        var currentUser = new CurrentUser(Guid.NewGuid(), Guid.NewGuid());
+        var plannedEvent = PlannedEvent.Create(
+            eventId,
+            currentUser.TenantId,
+            "Launch plan",
+            DateOnly.FromDateTime(now.DateTime).AddDays(1),
+            EventType.Event,
+            null,
+            now,
+            location: null,
+            timeZoneId: null,
+            eventStartTime: new TimeOnly(18, 0),
+            eventEndTime: new TimeOnly(23, 0));
+        var expectedToken = plannedEvent.ConcurrencyToken;
+        var repository = CreateRepository(eventId, currentUser, plannedEvent, expectedToken, updateResult: true);
+        var timeProvider = new Mock<TimeProvider>();
+        timeProvider.Setup(provider => provider.GetUtcNow()).Returns(now.AddMinutes(10));
+        var outbox = new Mock<IIntegrationEventOutbox>();
+        var handler = new UpdateEventCommandHandler(
+            repository.Object,
+            outbox.Object,
+            timeProvider.Object,
+            NullLogger<UpdateEventCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new UpdateEventCommand(
+                eventId,
+                "Launch plan",
+                DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
+                null,
+                Convert.ToBase64String(expectedToken),
+                EventStartTime: "  ",
+                EventEndTime: "  ")
+            {
+                CurrentUser = currentUser
+            },
+            CancellationToken.None);
+
+        Assert.Equal(UpdateEventStatus.Updated, result.Status);
+        Assert.NotNull(result.Event);
+        Assert.Null(result.Event.EventStartTime);
+        Assert.Null(result.Event.EventEndTime);
     }
 
     [Fact]
@@ -369,7 +515,7 @@ public sealed class UpdateEventCommandHandlerTests
                 DateOnly.FromDateTime(now.DateTime).AddDays(2).ToString("yyyy-MM-dd"),
                 null,
                 Convert.ToBase64String(expectedToken),
-                new UpdateEventLocation("The Riverside Room", "20 Riverside Drive", null),
+                new EventLocationInput("The Riverside Room", "20 Riverside Drive", null),
                 "Europe/Berlin")
             {
                 CurrentUser = currentUser

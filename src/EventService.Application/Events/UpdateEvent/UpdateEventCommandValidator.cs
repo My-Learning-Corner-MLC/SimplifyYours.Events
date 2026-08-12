@@ -42,6 +42,32 @@ public sealed class UpdateEventCommandValidator : AbstractValidator<UpdateEventC
                 || TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId.Trim(), out _))
             .WithMessage("Time zone must be a valid IANA time zone id.");
 
+        RuleFor(command => command.EventStartTime)
+            .Must(eventStartTime => eventStartTime is null
+                || string.IsNullOrWhiteSpace(eventStartTime)
+                || EventParsing.TryParseEventTime(eventStartTime, out _))
+            .WithMessage("Event start time must be a valid time string.");
+
+        RuleFor(command => command.EventEndTime)
+            .Cascade(CascadeMode.Stop)
+            .Must((command, eventEndTime) => eventEndTime is null
+                || string.IsNullOrWhiteSpace(eventEndTime)
+                || EventParsing.TryParseEventTime(eventEndTime, out _))
+            .WithMessage("Event end time must be a valid time string.")
+            .Must((command, eventEndTime) =>
+            {
+                if (string.IsNullOrWhiteSpace(eventEndTime)
+                    || string.IsNullOrWhiteSpace(command.EventStartTime)
+                    || !EventParsing.TryParseEventTime(eventEndTime, out var parsedEndTime)
+                    || !EventParsing.TryParseEventTime(command.EventStartTime, out var parsedStartTime))
+                {
+                    return true;
+                }
+
+                return parsedEndTime >= parsedStartTime;
+            })
+            .WithMessage("Event end time must be at or after the start time.");
+
         When(command => command.Location is not null, () =>
         {
             RuleFor(command => command.Location!.VenueName)

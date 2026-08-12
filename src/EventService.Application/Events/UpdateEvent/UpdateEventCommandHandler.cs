@@ -41,7 +41,9 @@ public sealed class UpdateEventCommandHandler(
             request.EventDescription,
             now,
             ResolveLocation(request.Location, plannedEvent.Location),
-            ResolveTimeZoneId(request.TimeZoneId, plannedEvent.TimeZoneId));
+            ResolveTimeZoneId(request.TimeZoneId, plannedEvent.TimeZoneId),
+            ResolveOptionalTime(request.EventStartTime, plannedEvent.EventStartTime),
+            ResolveOptionalTime(request.EventEndTime, plannedEvent.EventEndTime));
 
         await integrationEventOutbox.AddAsync(
             EventReferenceIntegrationEvents.Updated(plannedEvent, now),
@@ -73,9 +75,7 @@ public sealed class UpdateEventCommandHandler(
         throw new ArgumentException("Event date must be a valid date string.", nameof(value));
     }
 
-    // An omitted location leaves the stored venue untouched so a partial update cannot silently
-    // erase details that already went out on invitations. Sending a location object replaces it.
-    private static EventLocation? ResolveLocation(UpdateEventLocation? location, EventLocation? currentLocation)
+    private static EventLocation? ResolveLocation(EventLocationInput? location, EventLocation? currentLocation)
     {
         return location is null
             ? currentLocation
@@ -85,9 +85,28 @@ public sealed class UpdateEventCommandHandler(
                 location.Notes);
     }
 
-    // An omitted time zone leaves the stored value untouched; a blank value clears it.
     private static string? ResolveTimeZoneId(string? timeZoneId, string? currentTimeZoneId)
     {
         return timeZoneId is null ? currentTimeZoneId : timeZoneId;
+    }
+
+    private static TimeOnly? ResolveOptionalTime(string? value, TimeOnly? currentValue)
+    {
+        if (value is null)
+        {
+            return currentValue;
+        }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (EventParsing.TryParseEventTime(value, out var parsed))
+        {
+            return parsed;
+        }
+
+        throw new ArgumentException("Event time must be a valid time string.", nameof(value));
     }
 }

@@ -19,6 +19,23 @@ public sealed class UpdateEventContractTests
         Assert.Equal("dG9rZW4=", request.ConcurrencyToken);
         Assert.Null(request.Location);
         Assert.Null(request.TimeZoneId);
+        Assert.Null(request.EventStartTime);
+        Assert.Null(request.EventEndTime);
+    }
+
+    [Fact]
+    public void UpdateEventRequest_ExposesStartAndEndTimeValues()
+    {
+        var request = new UpdateEventRequest(
+            "Launch plan",
+            "2026-05-16",
+            null,
+            "dG9rZW4=",
+            EventStartTime: "18:00",
+            EventEndTime: "23:00");
+
+        Assert.Equal("18:00", request.EventStartTime);
+        Assert.Equal("23:00", request.EventEndTime);
     }
 
     [Fact]
@@ -57,10 +74,14 @@ public sealed class UpdateEventContractTests
             createdAt.AddMinutes(5),
             "dG9rZW4=",
             location,
-            "Europe/Berlin");
+            "Europe/Berlin",
+            new TimeOnly(18, 0),
+            new TimeOnly(23, 0));
 
         Assert.Same(location, response.Location);
         Assert.Equal("Europe/Berlin", response.TimeZoneId);
+        Assert.Equal(new TimeOnly(18, 0), response.EventStartTime);
+        Assert.Equal(new TimeOnly(23, 0), response.EventEndTime);
     }
 
     [Fact]
@@ -80,5 +101,7 @@ public sealed class UpdateEventContractTests
 
         Assert.Null(response.Location);
         Assert.Null(response.TimeZoneId);
+        Assert.Null(response.EventStartTime);
+        Assert.Null(response.EventEndTime);
     }
 }

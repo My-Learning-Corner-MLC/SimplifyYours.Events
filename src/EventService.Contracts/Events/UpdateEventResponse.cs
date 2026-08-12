@@ -10,4 +10,6 @@ public sealed record UpdateEventResponse(
     DateTimeOffset UpdatedAt,
     string ConcurrencyToken,
     EventLocationDto? Location = null,
-    string? TimeZoneId = null);
+    string? TimeZoneId = null,
+    TimeOnly? EventStartTime = null,
+    TimeOnly? EventEndTime = null);

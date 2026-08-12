@@ -162,11 +162,11 @@ Response body:
 
 ### `PUT /events/{id}`
 
-Updates an active event's editable details: event name, event date, event description, location, and time zone.
+Updates an active event's editable details: event name, event date, event description, location, time zone, and start/end time.
 
 Clients must send the latest `concurrencyToken` returned by create, get details, or the previous update response. Stale tokens are rejected to prevent overwriting another update.
 
-`location` and `timeZoneId` are optional. Omitting a field leaves the stored value unchanged, so a client that does not know about them cannot erase a venue that has already gone out on invitations. To clear a stored value, send it explicitly: a `location` object whose fields are all empty clears the location, and an empty `timeZoneId` clears the time zone. Sending a `location` object replaces the stored location as a whole rather than merging field by field.
+`location`, `timeZoneId`, `eventStartTime`, and `eventEndTime` are optional. Omitting a field leaves the stored value unchanged, so a client that does not know about them cannot erase a venue or schedule that has already gone out on invitations. To clear a stored value, send it explicitly: a `location` object whose fields are all empty clears the location, and an empty `timeZoneId`, `eventStartTime`, or `eventEndTime` clears that field. Sending a `location` object replaces the stored location as a whole rather than merging field by field.
 
 Request body:
 
@@ -181,7 +181,9 @@ Request body:
     "address": "20 Riverside Drive",
     "notes": "Parking behind the building."
   },
-  "timeZoneId": "Europe/Berlin"
+  "timeZoneId": "Europe/Berlin",
+  "eventStartTime": "18:00",
+  "eventEndTime": "23:00"
 }
 ```
 
@@ -211,7 +213,9 @@ Response body:
     "address": "20 Riverside Drive",
     "notes": "Parking behind the building."
   },
-  "timeZoneId": "Europe/Berlin"
+  "timeZoneId": "Europe/Berlin",
+  "eventStartTime": "18:00:00",
+  "eventEndTime": "23:00:00"
 }
 ```
 

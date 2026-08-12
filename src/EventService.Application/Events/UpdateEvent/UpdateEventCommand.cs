@@ -1,4 +1,5 @@
 using EventService.Application.Authorization;
+using EventService.Application.Events;
 using MediatR;
 
 namespace EventService.Application.Events.UpdateEvent;
@@ -9,10 +10,7 @@ public sealed record UpdateEventCommand(
     string EventDate,
     string? EventDescription,
     string ConcurrencyToken,
-    UpdateEventLocation? Location = null,
-    string? TimeZoneId = null) : BaseCommand, IRequest<UpdateEventResult>;
-
-public sealed record UpdateEventLocation(
-    string? VenueName,
-    string? Address,
-    string? Notes);
+    EventLocationInput? Location = null,
+    string? TimeZoneId = null,
+    string? EventStartTime = null,
+    string? EventEndTime = null) : BaseCommand, IRequest<UpdateEventResult>;

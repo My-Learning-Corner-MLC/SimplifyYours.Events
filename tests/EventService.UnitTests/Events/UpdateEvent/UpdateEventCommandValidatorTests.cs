@@ -1,3 +1,4 @@
+using EventService.Application.Events;
 using EventService.Application.Events.UpdateEvent;
 using Moq;
 
@@ -152,7 +153,7 @@ public sealed class UpdateEventCommandValidatorTests
             DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
             null,
             _token,
-            new UpdateEventLocation("The Riverside Room", "20 Riverside Drive", "Parking behind the building."),
+            new EventLocationInput("The Riverside Room", "20 Riverside Drive", "Parking behind the building."),
             "Europe/Berlin");
 
         var result = await validator.ValidateAsync(command);
@@ -208,7 +209,7 @@ public sealed class UpdateEventCommandValidatorTests
     public async Task Validate_WhenVenueNameIsTooLong_Fails()
     {
         var validator = CreateValidator();
-        var command = CreateCommandWithLocation(new UpdateEventLocation(new string('a', 201), null, null));
+        var command = CreateCommandWithLocation(new EventLocationInput(new string('a', 201), null, null));
 
         var result = await validator.ValidateAsync(command);
 
@@ -222,7 +223,7 @@ public sealed class UpdateEventCommandValidatorTests
     public async Task Validate_WhenAddressIsTooLong_Fails()
     {
         var validator = CreateValidator();
-        var command = CreateCommandWithLocation(new UpdateEventLocation(null, new string('a', 501), null));
+        var command = CreateCommandWithLocation(new EventLocationInput(null, new string('a', 501), null));
 
         var result = await validator.ValidateAsync(command);
 
@@ -236,7 +237,7 @@ public sealed class UpdateEventCommandValidatorTests
     public async Task Validate_WhenLocationNotesAreTooLong_Fails()
     {
         var validator = CreateValidator();
-        var command = CreateCommandWithLocation(new UpdateEventLocation(null, null, new string('a', 2001)));
+        var command = CreateCommandWithLocation(new EventLocationInput(null, null, new string('a', 2001)));
 
         var result = await validator.ValidateAsync(command);
 
@@ -246,7 +247,82 @@ public sealed class UpdateEventCommandValidatorTests
             error => error.ErrorMessage == "Location notes must not exceed 2000 characters.");
     }
 
-    private UpdateEventCommand CreateCommandWithLocation(UpdateEventLocation location)
+    [Fact]
+    public async Task Validate_WithValidStartAndEndTime_Passes()
+    {
+        var validator = CreateValidator();
+        var command = CreateCommandWithTime(startTime: "14:00", endTime: "18:00");
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public async Task Validate_WhenStartTimeIsInvalid_FailsOnEventStartTime()
+    {
+        var validator = CreateValidator();
+        var command = CreateCommandWithTime(startTime: "not-a-time");
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventStartTime));
+    }
+
+    [Fact]
+    public async Task Validate_WhenEndTimeIsInvalid_FailsOnEventEndTime()
+    {
+        var validator = CreateValidator();
+        var command = CreateCommandWithTime(endTime: "not-a-time");
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventEndTime));
+    }
+
+    [Fact]
+    public async Task Validate_WhenEndTimeBeforeStartTime_FailsOnEventEndTime()
+    {
+        var validator = CreateValidator();
+        var command = CreateCommandWithTime(startTime: "18:00", endTime: "14:00");
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(UpdateEventCommand.EventEndTime));
+    }
+
+    [Fact]
+    public async Task Validate_WhenStartAndEndTimeOmitted_Passes()
+    {
+        var validator = CreateValidator();
+        var command = new UpdateEventCommand(
+            Guid.NewGuid(),
+            "Launch plan",
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
+            null,
+            _token);
+
+        var result = await validator.ValidateAsync(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    private UpdateEventCommand CreateCommandWithTime(string? startTime = null, string? endTime = null)
+    {
+        return new UpdateEventCommand(
+            Guid.NewGuid(),
+            "Launch plan",
+            DateOnly.FromDateTime(_now.DateTime).AddDays(1).ToString("yyyy-MM-dd"),
+            null,
+            _token,
+            EventStartTime: startTime,
+            EventEndTime: endTime);
+    }
+
+    private UpdateEventCommand CreateCommandWithLocation(EventLocationInput location)
     {
         return new UpdateEventCommand(
             Guid.NewGuid(),
