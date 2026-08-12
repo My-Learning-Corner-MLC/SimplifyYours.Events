@@ -7,7 +7,8 @@ namespace EventService.Application.IntegrationEvents;
 
 public static class EventReferenceIntegrationEvents
 {
-    private const int CurrentVersion = 3;
+    private const int CurrentVersion = 1;
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public static IntegrationEventEnvelope Created(PlannedEvent plannedEvent, DateTimeOffset occurredAt)
@@ -35,7 +36,16 @@ public static class EventReferenceIntegrationEvents
                 plannedEvent.Id,
                 plannedEvent.Name,
                 plannedEvent.TenantId,
-                plannedEvent.Type.ToString().ToLowerInvariant()),
+                plannedEvent.Type.ToString().ToLowerInvariant(),
+                plannedEvent.EventDate,
+                plannedEvent.EventStartTime,
+                plannedEvent.TimeZoneId,
+                plannedEvent.Location is null
+                    ? null
+                    : new EventReferenceLocationPayload(
+                        plannedEvent.Location.VenueName,
+                        plannedEvent.Location.Address,
+                        plannedEvent.Location.Notes)),
             JsonOptions);
 
         return new IntegrationEventEnvelope(
