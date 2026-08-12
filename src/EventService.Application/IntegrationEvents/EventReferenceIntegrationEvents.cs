@@ -7,13 +7,7 @@ namespace EventService.Application.IntegrationEvents;
 
 public static class EventReferenceIntegrationEvents
 {
-    /// <summary>
-    /// Version 4 added the display fields that public invitation pages render (date, times, time
-    /// zone, description, location). Consumers must read their absence below version 4 as "not
-    /// published yet", never as "cleared" — otherwise replaying older messages would wipe a venue
-    /// that is still current.
-    /// </summary>
-    private const int CurrentVersion = 4;
+    private const int CurrentVersion = 1;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
